@@ -1,30 +1,29 @@
 /*
  * Tests for quadrature related routines: nodes and matrices.
  */
-#include <iostream>
+#include "fixtures/test_helpers.hpp"
+
 #include <algorithm>
-#include <iostream>
-#include <tuple>
-#include <type_traits>
+using namespace std;
 
-#include <gtest/gtest.h>
-#include <gmock/gmock.h>
-
+#include <leathers/push>
+#include <leathers/all>
 #include <Eigen/Dense>
-
-using namespace ::testing;
+#include <leathers/pop>
 
 #include <pfasst/quadrature.hpp>
-
-#include "fixtures/concepts.hpp"
-
-using namespace std;
 using namespace pfasst::quadrature;
 
-MATCHER(DoubleNear, "")
-{
-  return abs(get<0>(arg) - get<1>(arg)) < 1e-15;
-}
+
+typedef ::testing::Types<IQuadrature<double>,
+                         GaussLegendre<double>,
+                         GaussLobatto<double>,
+                         GaussRadau<double>,
+                         ClenshawCurtis<double>,
+                         Uniform<double>
+                        > QuadratureTypes;
+INSTANTIATE_TYPED_TEST_CASE_P(Quadrature, Concepts, QuadratureTypes);
+
 
 TEST(NodesTest, GaussLegendreNodes)
 {
@@ -312,16 +311,4 @@ INSTANTIATE_TEST_CASE_P(Quadrature, QmatTest,
                                                          QuadratureType::Uniform)));
 
 
-typedef ::testing::Types<GaussLegendre<>,
-                         GaussLobatto<>,
-                         GaussRadau<>,
-                         ClenshawCurtis<>,
-                         Uniform<>> QuadratureTypes;
-INSTANTIATE_TYPED_TEST_CASE_P(Quadrature, ConceptsTest, QuadratureTypes);
-
-
-int main(int argc, char** argv)
-{
-  InitGoogleTest(&argc, argv);
-  return RUN_ALL_TESTS();
-}
+TEST_MAIN()

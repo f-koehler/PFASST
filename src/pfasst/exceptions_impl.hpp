@@ -12,7 +12,7 @@ namespace pfasst
    * The message string is prepended by the string `Not implemented/supported yet, required for: `
    * @endinternals
    */
-  const char* NotImplementedYet::what() const throw()
+  const char* NotImplementedYet::what() const noexcept
   {
     string message = "Not implemented/supported yet, required for: ";
     message += string(runtime_error::what());
@@ -29,7 +29,7 @@ namespace pfasst
    * The message string is prepended by the string `Value Error: `
    * @endinternals
    */
-  const char* ValueError::what() const throw()
+  const char* ValueError::what() const noexcept
   {
     string message = "Value Error: ";
     message += string(invalid_argument::what());

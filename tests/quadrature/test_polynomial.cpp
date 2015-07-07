@@ -1,11 +1,7 @@
 /*
  * Tests for Polynomials
  */
-
-#include <gtest/gtest.h>
-#include <gmock/gmock.h>
-
-using namespace ::testing;
+#include "fixtures/test_helpers.hpp"
 
 #include <pfasst/quadrature/polynomial.hpp>
 
@@ -43,9 +39,4 @@ TEST(PolynomialTest, Legendre)
   EXPECT_EQ(a1, 1.0);
 }
 
-
-int main(int argc, char** argv)
-{
-  InitGoogleTest(&argc, argv);
-  return RUN_ALL_TESTS();
-}
+TEST_MAIN()

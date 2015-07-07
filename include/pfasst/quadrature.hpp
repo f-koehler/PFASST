@@ -10,11 +10,14 @@
 #include <vector>
 using namespace std;
 
+#include <leathers/push>
+#include <leathers/all>
 #include <Eigen/Dense>
-template<typename scalar>
-using Matrix = Eigen::Matrix<scalar, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>;
+template<typename precision>
+using Matrix = Eigen::Matrix<precision, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>;
 
 #include <boost/math/constants/constants.hpp>
+#include <leathers/pop>
 
 #include "pfasst/config.hpp"
 #include "pfasst/exceptions.hpp"
@@ -25,9 +28,6 @@ using Matrix = Eigen::Matrix<scalar, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowM
 #include "pfasst/quadrature/gauss_radau.hpp"
 #include "pfasst/quadrature/clenshaw_curtis.hpp"
 #include "pfasst/quadrature/uniform.hpp"
-
-template<typename scalar>
-using Matrix = Eigen::Matrix<scalar, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>;
 
 
 namespace pfasst
@@ -49,7 +49,7 @@ namespace pfasst
      *   of nodes
      * @throws pfasst::ValueError if @p qtype is not a valid quadrature type descriptor
      */
-    template<typename precision = pfasst::time_precision>
+    template<typename precision>
     shared_ptr<IQuadrature<precision>> quadrature_factory(const size_t nnodes,
                                                           const QuadratureType qtype)
     {
@@ -80,7 +80,7 @@ namespace pfasst
      * @see pfasst::quadrature::QuadratureType for valid types
      * @see pfasst::quadrature::quadrature_factory for further details
      */
-    template<typename precision = pfasst::time_precision>
+    template<typename precision>
     vector<precision> compute_nodes(size_t nnodes, QuadratureType qtype)
     {
       return quadrature_factory<precision>(nnodes, qtype)->get_nodes();
@@ -91,7 +91,7 @@ namespace pfasst
      *
      * @tparam precision numerical type of the interpolation (e.g. `double`)
      */
-    template<typename precision = time_precision>
+    template<typename precision>
     Matrix<precision> compute_interp(vector<precision> dst, vector<precision> src)
     {
       const size_t ndst = dst.size();

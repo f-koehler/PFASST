@@ -28,7 +28,7 @@ namespace pfasst
        * @param[in] msg component or algorithm the throwing function is required for
        */
       explicit NotImplementedYet(const string& msg);
-      virtual const char* what() const throw();
+      virtual const char* what() const noexcept;
   };
 
 
@@ -46,7 +46,7 @@ namespace pfasst
   {
     public:
       explicit ValueError(const string& msg);
-      virtual const char* what() const throw();
+      virtual const char* what() const noexcept;
   };
 }  // ::pfasst
 

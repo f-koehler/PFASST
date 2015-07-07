@@ -14,10 +14,16 @@ using namespace std;
 
 #ifdef WITH_MPI
   #include <sstream>
+  #include <leathers/push>
+  #include <leathers/all>
   #include <mpi.h>
+  #include <leathers/pop>
 #endif
 
+#include <leathers/push>
+#include <leathers/all>
 #include <boost/algorithm/string.hpp>
+#include <leathers/pop>
 
 #include "pfasst/site_config.hpp"
 #include "pfasst/config.hpp"
@@ -67,6 +73,9 @@ const string OUT::reset = "\033[0m";
 
 // enable easy logging of STL containers
 #define ELPP_STL_LOGGING
+#define ELPP_LOG_STD_ARRAY
+#define ELPP_LOG_UNORDERED_MAP
+#define ELPP_LOG_UNORDERED_SET
 // disable creation of default log file
 #define ELPP_NO_DEFAULT_LOG_FILE
 // enable passing `--logging-flags` via command line
@@ -81,7 +90,10 @@ const string OUT::reset = "\033[0m";
   #define ELPP_DISABLE_LOGS
 #endif
 
+#include <leathers/push>
+#include <leathers/all>
 #include <pfasst/easylogging++.h>
+#include <leathers/pop>
 
 
 #ifndef PFASST_LOGGER_INITIALIZED
@@ -145,7 +157,7 @@ const string OUT::reset = "\033[0m";
  *
  * @see pfasst::log::add_custom_logger()
  */
-#define LOGGER_ID_LENGTH 10
+#define LOGGER_ID_LENGTH 7
 
 
 namespace pfasst
@@ -220,9 +232,15 @@ namespace pfasst
      *
      * @ingroup Internals
      */
-    inline string get_log_file_name()
+    inline string get_log_file_name(const string& prefix="")
     {
-      string log_name = config::get_value<string>("log_prefix", "");
+      string log_name;
+      if (prefix.empty()) {
+        log_name = config::get_value<string>("log_prefix", "");
+      } else {
+        log_name = prefix;
+      }
+
 #ifdef WITH_MPI
       if (log_name.size() > 0) {
         log_name += "_";
@@ -358,23 +376,28 @@ namespace pfasst
      *
      * @ingroup Internals
      */
-    inline static void load_default_config()
+    inline static void load_default_config(const bool no_custom_loggers=false)
     {
-      el::Configurations defaultConf;
-      defaultConf.setToDefault();
+      if (!pfasst::log::initialized) {
+        el::Configurations defaultConf;
+        defaultConf.setToDefault();
 
-      set_global_logging_options(&defaultConf);
+        set_global_logging_options(&defaultConf);
 
-      el::Loggers::setDefaultConfigurations(defaultConf, true);
+        el::Loggers::setDefaultConfigurations(defaultConf, true);
 
-      add_custom_logger("default");
-      pfasst::log::initialized = true;
-      add_custom_logger("Controller");
-      add_custom_logger("Communicator");
-      add_custom_logger("Sweeper");
-      add_custom_logger("Encap");
-      add_custom_logger("Quadrature");
-      add_custom_logger("User");
+        add_custom_logger("default");
+        pfasst::log::initialized = true;
+      }
+
+      if (!no_custom_loggers) {
+        add_custom_logger("CONTROL");
+        add_custom_logger("COMM");
+        add_custom_logger("SWEEPER");
+        add_custom_logger("ENCAP");
+        add_custom_logger("QUAD");
+        add_custom_logger("USER");
+      }
     }
 
     /**
@@ -454,15 +477,16 @@ namespace pfasst
      *
      * @ingroup Internals
      */
-    inline static void start_log(int argc, char** argv)
+    inline static void start_log(int argc, char** argv, const bool no_custom_loggers=false)
     {
       START_EASYLOGGINGPP(argc, argv);
       set_logging_flags();
-      load_default_config();
+      load_default_config(no_custom_loggers);
       pfasst::log::stack_position = 0;
       CLOG(INFO, "default") << "PFASST++ version " << pfasst::VERSION;
     }
   }  // ::pfasst::log
 }  // ::pfasst
+
 
 #endif  // _PFASST__LOGGING_HPP_

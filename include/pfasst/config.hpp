@@ -11,7 +11,10 @@
 #include <map>
 using namespace std;
 
+#include <leathers/push>
+#include <leathers/all>
 #include <boost/program_options.hpp>
+#include <leathers/pop>
 namespace po = boost::program_options;
 
 #ifdef WITH_MPI
