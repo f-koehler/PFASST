@@ -3,13 +3,15 @@
 #include <pfasst/sweeper/imex.hpp>
 using pfasst::IMEX;
 
-
+#include <pfasst/encap/traits.hpp>
 #include <pfasst/encap/vector.hpp>
+typedef pfasst::vector_encap_traits<double, double> VectorEncapTrait;
+typedef pfasst::encap::Encapsulation<VectorEncapTrait> VectorEncapsulation;
 
 #include "quadrature/mocks.hpp"
 
 
-typedef ::testing::Types<IMEX<double, pfasst::encap::VectorEncapsulation<double>>> SweeperTypes;
+typedef ::testing::Types<IMEX<double, VectorEncapsulation>> SweeperTypes;
 INSTANTIATE_TYPED_TEST_CASE_P(IMEX, Concepts, SweeperTypes);
 
 
@@ -17,7 +19,7 @@ class Setup
   : public ::testing::Test
 {
   protected:
-    IMEX<double, pfasst::encap::VectorEncapsulation<double>> sweeper;
+    IMEX<double, VectorEncapsulation> sweeper;
 
     vector<double> nodes{0.0, 0.5, 1.0};
     shared_ptr<NiceMock<QuadratureMock<double>>> quadrature = make_shared<NiceMock<QuadratureMock<double>>>();
@@ -80,8 +82,8 @@ class DataAccess
   : public ::testing::Test
 {
   protected:
-    typedef          IMEX<double, pfasst::encap::VectorEncapsulation<double>> sweeper_type;
-    typedef typename sweeper_type::encap_type                                 encap_type;
+    typedef          IMEX<double, VectorEncapsulation> sweeper_type;
+    typedef typename sweeper_type::encap_type          encap_type;
 
     sweeper_type sweeper;
 

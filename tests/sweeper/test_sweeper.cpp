@@ -6,12 +6,15 @@ using namespace std;
 #include <pfasst/sweeper/interface.hpp>
 using pfasst::Sweeper;
 
+#include <pfasst/encap/traits.hpp>
 #include <pfasst/encap/vector.hpp>
+typedef pfasst::vector_encap_traits<double, double> VectorEncapTrait;
+typedef pfasst::encap::Encapsulation<VectorEncapTrait> VectorEncapsulation;
 
 #include "quadrature/mocks.hpp"
 
 
-typedef ::testing::Types<Sweeper<double, pfasst::encap::VectorEncapsulation<double>>> SweeperTypes;
+typedef ::testing::Types<Sweeper<double, VectorEncapsulation>> SweeperTypes;
 INSTANTIATE_TYPED_TEST_CASE_P(Sweeper, Concepts, SweeperTypes);
 
 
@@ -19,8 +22,8 @@ class Setup
   : public ::testing::Test
 {
   protected:
-    typedef          Sweeper<double, pfasst::encap::VectorEncapsulation<double>> sweeper_type;
-    typedef typename sweeper_type::encap_type                                    encap_type;
+    typedef          Sweeper<double, VectorEncapsulation> sweeper_type;
+    typedef typename sweeper_type::encap_type             encap_type;
 
     sweeper_type sweeper;
 
@@ -89,8 +92,8 @@ class DataAccess
   : public ::testing::Test
 {
   protected:
-    typedef          Sweeper<double, pfasst::encap::VectorEncapsulation<double>> sweeper_type;
-    typedef typename sweeper_type::encap_type                                    encap_type;
+    typedef          Sweeper<double, VectorEncapsulation> sweeper_type;
+    typedef typename sweeper_type::encap_type             encap_type;
 
     sweeper_type sweeper;
 
@@ -154,8 +157,8 @@ class Interface
   : public ::testing::Test
 {
   protected:
-    typedef          Sweeper<double, pfasst::encap::VectorEncapsulation<double>> sweeper_type;
-    typedef typename sweeper_type::encap_type                                    encap_type;
+    typedef          Sweeper<double, VectorEncapsulation> sweeper_type;
+    typedef typename sweeper_type::encap_type             encap_type;
 
     sweeper_type sweeper;
 };
@@ -199,8 +202,8 @@ class Logic
   : public ::testing::Test
 {
   protected:
-    typedef          Sweeper<double, pfasst::encap::VectorEncapsulation<double>> sweeper_type;
-    typedef typename sweeper_type::encap_type                                    encap_type;
+    typedef          Sweeper<double, VectorEncapsulation> sweeper_type;
+    typedef typename sweeper_type::encap_type             encap_type;
 
     sweeper_type sweeper;
 

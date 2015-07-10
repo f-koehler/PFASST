@@ -3,8 +3,11 @@
 #include <pfasst/controller/interface.hpp>
 using pfasst::Controller;
 
+#include <pfasst/encap/traits.hpp>
 #include <pfasst/encap/vector.hpp>
-using pfasst::encap::VectorEncapsulation;
+typedef pfasst::vector_encap_traits<double, double> VectorEncapTrait;
+typedef pfasst::encap::Encapsulation<VectorEncapTrait> VectorEncapsulation;
+
 #include <pfasst/sweeper/interface.hpp>
 using pfasst::Sweeper;
 
@@ -13,7 +16,7 @@ using pfasst::Sweeper;
 #include "sweeper/mocks.hpp"
 
 
-typedef ::testing::Types<Controller<double, VectorEncapsulation<double>>> ControllerTypes;
+typedef ::testing::Types<Controller<double, VectorEncapsulation>> ControllerTypes;
 INSTANTIATE_TYPED_TEST_CASE_P(Controller, Concepts, ControllerTypes);
 
 
@@ -21,14 +24,14 @@ class Interface
   : public ::testing::Test
 {
   protected:
-    shared_ptr<Controller<double, VectorEncapsulation<double>>> controller;
+    shared_ptr<Controller<double, VectorEncapsulation>> controller;
 
     shared_ptr<StatusMock<double>> status;
     shared_ptr<CommMock> comm;
 
     virtual void SetUp()
     {
-      this->controller = make_shared<Controller<double, VectorEncapsulation<double>>>();
+      this->controller = make_shared<Controller<double, VectorEncapsulation>>();
       this->status = make_shared<StatusMock<double>>();
       this->comm = make_shared<CommMock>();
     }
@@ -98,20 +101,20 @@ class Setup
   : public ::testing::Test
 {
   protected:
-    shared_ptr<Controller<double, VectorEncapsulation<double>>> controller;
+    shared_ptr<Controller<double, VectorEncapsulation>> controller;
 
     shared_ptr<StatusMock<double>> status;
     shared_ptr<CommMock> comm;
-    shared_ptr<Sweeper<double, VectorEncapsulation<double>>> sweeper1;
-    shared_ptr<Sweeper<double, VectorEncapsulation<double>>> sweeper2;
+    shared_ptr<Sweeper<double, VectorEncapsulation>> sweeper1;
+    shared_ptr<Sweeper<double, VectorEncapsulation>> sweeper2;
 
     virtual void SetUp()
     {
-      this->controller = make_shared<Controller<double, VectorEncapsulation<double>>>();
+      this->controller = make_shared<Controller<double, VectorEncapsulation>>();
       this->status = make_shared<StatusMock<double>>();
       this->comm = make_shared<CommMock>();
-      this->sweeper1 = make_shared<Sweeper<double, VectorEncapsulation<double>>>();
-      this->sweeper2 = make_shared<Sweeper<double, VectorEncapsulation<double>>>();
+      this->sweeper1 = make_shared<Sweeper<double, VectorEncapsulation>>();
+      this->sweeper2 = make_shared<Sweeper<double, VectorEncapsulation>>();
     }
 };
 
@@ -177,20 +180,20 @@ class Logic
   : public ::testing::Test
 {
   protected:
-    shared_ptr<Controller<double, VectorEncapsulation<double>>> controller;
+    shared_ptr<Controller<double, VectorEncapsulation>> controller;
 
     shared_ptr<StatusMock<double>> status;
     shared_ptr<CommMock> comm;
-    shared_ptr<Sweeper<double, VectorEncapsulation<double>>> sweeper1;
-    shared_ptr<Sweeper<double, VectorEncapsulation<double>>> sweeper2;
+    shared_ptr<Sweeper<double, VectorEncapsulation>> sweeper1;
+    shared_ptr<Sweeper<double, VectorEncapsulation>> sweeper2;
 
     virtual void SetUp()
     {
-      this->controller = make_shared<Controller<double, VectorEncapsulation<double>>>();
+      this->controller = make_shared<Controller<double, VectorEncapsulation>>();
       this->status = make_shared<StatusMock<double>>();
       this->comm = make_shared<CommMock>();
-      this->sweeper1 = make_shared<Sweeper<double, VectorEncapsulation<double>>>();
-      this->sweeper2 = make_shared<Sweeper<double, VectorEncapsulation<double>>>();
+      this->sweeper1 = make_shared<Sweeper<double, VectorEncapsulation>>();
+      this->sweeper2 = make_shared<Sweeper<double, VectorEncapsulation>>();
     }
 };
 

@@ -24,6 +24,8 @@
         // ...
       };
 
+  See encapsulation_traits for starting example.
+
 - Sweeper
   - rethink place for pre-/post-predict/sweep methods
     are these better placed in Controller? Controller does the communication, not the sweeper

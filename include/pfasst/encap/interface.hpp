@@ -14,6 +14,7 @@ using Matrix = Eigen::Matrix<precision, Eigen::Dynamic, Eigen::Dynamic, Eigen::R
 
 #include "pfasst/globals.hpp"
 #include "pfasst/logging.hpp"
+#include "pfasst/encap/traits.hpp"
 #include "pfasst/comm/interface.hpp"
 
 
@@ -22,94 +23,97 @@ namespace pfasst
   namespace encap
   {
     template<
-      typename precision,
-      template<typename...> class DataT
+      class EncapsulationTrait,
+      typename Enabled = void
     >
     class Encapsulation;
 
     template<
-      typename precision,
-      template<typename...> class DataT
+      class EncapsulationTrait,
+      typename Enabled = void
     >
     class EncapsulationFactory;
 
+
     template<
-      typename precision,
-      template<typename...> class DataT
+      class EncapsulationTrait
     >
-    shared_ptr<Encapsulation<precision, DataT>>
-    axpy(const precision& a,
-         const shared_ptr<Encapsulation<precision, DataT>> x,
-         const shared_ptr<Encapsulation<precision, DataT>> y);
+    shared_ptr<Encapsulation<EncapsulationTrait>>
+    axpy(const typename EncapsulationTrait::time_type& a,
+         const shared_ptr<Encapsulation<EncapsulationTrait>> x,
+         const shared_ptr<Encapsulation<EncapsulationTrait>> y);
 
     template<
-      typename precision,
-      template<typename...> class DataT
+      class EncapsulationTrait
     >
-    vector<shared_ptr<Encapsulation<precision, DataT>>>
-    mat_apply(const precision& a, const Matrix<precision>& M,
-              const vector<shared_ptr<Encapsulation<precision, DataT>>>& x);
+    vector<shared_ptr<Encapsulation<EncapsulationTrait>>>
+    mat_apply(const typename EncapsulationTrait::time_type& a,
+              const Matrix<typename EncapsulationTrait::time_type>& M,
+              const vector<shared_ptr<Encapsulation<EncapsulationTrait>>>& x);
 
     template<
-      typename precision,
-      template<typename...> class DataT
+      class EncapsulationTrait
     >
-    precision
-    norm0(const shared_ptr<Encapsulation<precision, DataT>> x);
+    typename EncapsulationTrait::spacial_type
+    norm0(const shared_ptr<Encapsulation<EncapsulationTrait>> x);
 
 
     template<
-      typename precision,
-      template<typename...> class DataT
+      class EncapsulationTrait,
+      typename Enabled
     >
     class Encapsulation
-      : public enable_shared_from_this<Encapsulation<precision, DataT>>
+      : public enable_shared_from_this<Encapsulation<EncapsulationTrait>>
     {
-      static_assert(is_arithmetic<precision>::value,
-                    "precision must be an arithmetic type");
-      static_assert(is_constructible<DataT<precision>>::value,
+      public:
+        typedef typename EncapsulationTrait::time_type    time_type;
+        typedef typename EncapsulationTrait::spacial_type spacial_type;
+        typedef typename EncapsulationTrait::data_type    data_type;
+        typedef EncapsulationFactory<EncapsulationTrait>  factory_type;
+
+      static_assert(is_arithmetic<time_type>::value,
+                    "time precision must be an arithmetic type");
+      static_assert(is_arithmetic<spacial_type>::value,
+                    "spacial precision must be an arithmetic type");
+      static_assert(is_constructible<data_type>::value,
                     "Data Type must be constructible");
-      static_assert(is_default_constructible<DataT<precision>>::value,
+      static_assert(is_default_constructible<data_type>::value,
                     "Data Type must be default constructible");
-      static_assert(is_destructible<DataT<precision>>::value,
+      static_assert(is_destructible<data_type>::value,
                     "Data Type must be destructible");
-      static_assert(is_assignable<DataT<precision>, DataT<precision>>::value,
+      static_assert(is_assignable<data_type, data_type>::value,
                     "Data Type must be assignable");
 
-      STATIC_WARNING(is_move_constructible<DataT<precision>>::value,
+      STATIC_WARNING(is_move_constructible<data_type>::value,
                      "Data Type should be move constructible");
-      STATIC_WARNING(is_copy_constructible<DataT<precision>>::value,
+      STATIC_WARNING(is_copy_constructible<data_type>::value,
                      "Data Type should be copy constructible");
-      STATIC_WARNING(is_move_assignable<DataT<precision>>::value,
+      STATIC_WARNING(is_move_assignable<data_type>::value,
                      "Data Type should be move assignable");
-      STATIC_WARNING(is_copy_assignable<DataT<precision>>::value,
+      STATIC_WARNING(is_copy_assignable<data_type>::value,
                      "Data Type should be copy assignable");
-
-      public:
-        typedef DataT<precision>                       data_type;
-        typedef precision                              precision_type;
-        typedef EncapsulationFactory<precision, DataT> factory_type;
 
       protected:
         data_type _data;
 
       public:
         Encapsulation() = default;
-        Encapsulation(const DataT<precision>& data);
-        Encapsulation(const Encapsulation<precision, DataT>& other) = default;
-        Encapsulation(Encapsulation<precision, DataT>&& other) = default;
+        Encapsulation(const typename EncapsulationTrait::data_type& data);
+        Encapsulation(const Encapsulation<EncapsulationTrait>& other) = default;
+        Encapsulation(Encapsulation<EncapsulationTrait>&& other) = default;
         ~Encapsulation() = default;
-        Encapsulation<precision, DataT>& operator=(const DataT<precision>& data);
-        Encapsulation<precision, DataT>& operator=(const Encapsulation<precision, DataT>& other) = default;
-        Encapsulation<precision, DataT>& operator=(Encapsulation<precision, DataT>&& other) = default;
+        Encapsulation<EncapsulationTrait>& operator=(const typename EncapsulationTrait::data_type& data);
+        Encapsulation<EncapsulationTrait>& operator=(const Encapsulation<EncapsulationTrait>& other) = default;
+        Encapsulation<EncapsulationTrait>& operator=(Encapsulation<EncapsulationTrait>&& other) = default;
 
-        virtual       DataT<precision>& data();
-        virtual const DataT<precision>& get_data() const;
+        virtual       typename EncapsulationTrait::data_type& data();
+        virtual const typename EncapsulationTrait::data_type& get_data() const;
 
         virtual void zero();
-        virtual void axpy(const precision& a, const shared_ptr<Encapsulation<precision, DataT>> y);
+        virtual void axpy(const typename EncapsulationTrait::time_type& a,
+                          const shared_ptr<Encapsulation<EncapsulationTrait>> y);
 
-        virtual precision norm0() const;
+        virtual typename EncapsulationTrait::spacial_type norm0() const;
 
         virtual void send(shared_ptr<comm::Communicator> comm, const int dest_rank, const int tag,
                           const bool blocking);
@@ -117,10 +121,31 @@ namespace pfasst
                           const bool blocking);
         virtual void bcast(shared_ptr<comm::Communicator> comm, const int root_rank);
     };
+
+
+    template<
+      class EncapsulationTrait,
+      class Enabled
+    >
+    class EncapsulationFactory
+    {
+      public:
+        typedef          Encapsulation<EncapsulationTrait> encap_type;
+        typedef typename EncapsulationTrait::data_type     data_type;
+
+        EncapsulationFactory() = default;
+        EncapsulationFactory(const EncapsulationFactory<EncapsulationTrait>& other) = default;
+        EncapsulationFactory(EncapsulationFactory<EncapsulationTrait>&& other) = default;
+        virtual ~EncapsulationFactory() = default;
+        EncapsulationFactory<EncapsulationTrait>&
+        operator=(const EncapsulationFactory<EncapsulationTrait>& other) = default;
+        EncapsulationFactory<EncapsulationTrait>&
+        operator=(EncapsulationFactory<EncapsulationTrait>&& other) = default;
+
+        shared_ptr<Encapsulation<EncapsulationTrait>> create();
+    };
   }  // ::encap
 }  // ::pfasst
-
-#include "pfasst/encap/factory.hpp"
 
 #include "pfasst/encap/interface_impl.hpp"
 

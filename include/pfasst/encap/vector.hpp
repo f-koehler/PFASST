@@ -2,6 +2,7 @@
 #define _PFASST__ENCAP__VECTOR_HPP_
 
 #include <memory>
+#include <type_traits>
 #include <vector>
 using namespace std;
 
@@ -16,15 +17,21 @@ namespace pfasst
   namespace encap
   {
     template<
-      typename precision
+      class EncapsulationTrait
     >
-    class Encapsulation<precision, vector>
-      : public enable_shared_from_this<Encapsulation<precision, vector>>
+    class Encapsulation<EncapsulationTrait,
+                        typename enable_if<
+                                   is_same<
+                                     vector<typename EncapsulationTrait::spacial_type>,
+                                     typename EncapsulationTrait::data_type
+                                   >::value>::type>
+      : public enable_shared_from_this<Encapsulation<EncapsulationTrait>>
     {
       public:
-        typedef vector<precision>                       data_type;
-        typedef precision                               precision_type;
-        typedef EncapsulationFactory<precision, vector> factory_type;
+        typedef typename EncapsulationTrait::time_type            time_type;
+        typedef typename EncapsulationTrait::spacial_type         spacial_type;
+        typedef typename EncapsulationTrait::data_type            data_type;
+        typedef          EncapsulationFactory<EncapsulationTrait> factory_type;
 
       protected:
         data_type _data;
@@ -32,21 +39,22 @@ namespace pfasst
       public:
         Encapsulation() = default;
         Encapsulation(const size_t size);
-        Encapsulation(const vector<precision>& data);
-        Encapsulation(const Encapsulation<precision, vector>& other) = default;
-        Encapsulation(Encapsulation<precision, vector>&& other) = default;
+        Encapsulation(const typename EncapsulationTrait::data_type& data);
+        Encapsulation(const Encapsulation<EncapsulationTrait>& other) = default;
+        Encapsulation(Encapsulation<EncapsulationTrait>&& other) = default;
         virtual ~Encapsulation() = default;
-        Encapsulation<precision, vector>& operator=(const vector<precision>& data);
-        Encapsulation<precision, vector>& operator=(const Encapsulation<precision, vector>& other) = default;
-        Encapsulation<precision, vector>& operator=(Encapsulation<precision, vector>&& other) = default;
+        Encapsulation<EncapsulationTrait>& operator=(const typename EncapsulationTrait::data_type& data);
+        Encapsulation<EncapsulationTrait>& operator=(const Encapsulation<EncapsulationTrait>& other) = default;
+        Encapsulation<EncapsulationTrait>& operator=(Encapsulation<EncapsulationTrait>&& other) = default;
 
-        virtual       vector<precision>& data();
-        virtual const vector<precision>& get_data() const;
+        virtual       typename EncapsulationTrait::data_type& data();
+        virtual const typename EncapsulationTrait::data_type& get_data() const;
 
         virtual void zero();
-        virtual void axpy(const precision& a, const shared_ptr<Encapsulation<precision, vector>> y);
+        virtual void axpy(const typename EncapsulationTrait::time_type& a,
+                          const shared_ptr<Encapsulation<EncapsulationTrait>> y);
 
-        virtual precision norm0() const;
+        virtual typename EncapsulationTrait::spacial_type norm0() const;
 
         virtual void send(shared_ptr<comm::Communicator> comm, const int dest_rank, const int tag,
                           const bool blocking);
@@ -55,29 +63,30 @@ namespace pfasst
         virtual void bcast(shared_ptr<comm::Communicator> comm, const int root_rank);
     };
 
-    template<typename precision>
-    using VectorEncapsulation = Encapsulation<precision, vector>;
-
 
     template<
-      typename precision
+      class EncapsulationTrait
     >
-    class EncapsulationFactory<precision, vector>
+    class EncapsulationFactory<EncapsulationTrait,
+                               typename enable_if<
+                                          is_same<
+                                            vector<typename EncapsulationTrait::spacial_type>,
+                                            typename EncapsulationTrait::data_type
+                                          >::value>::type>
+      : public enable_shared_from_this<EncapsulationFactory<EncapsulationTrait>>
     {
       protected:
         size_t _size;
 
       public:
         explicit EncapsulationFactory(const size_t size=0);
-        EncapsulationFactory(const EncapsulationFactory<precision, vector>& other) = default;
-        EncapsulationFactory(EncapsulationFactory<precision, vector>&& other) = default;
+        EncapsulationFactory(const EncapsulationFactory<EncapsulationTrait>& other) = default;
+        EncapsulationFactory(EncapsulationFactory<EncapsulationTrait>&& other) = default;
         virtual ~EncapsulationFactory() = default;
-        EncapsulationFactory<precision, vector>&
-        operator=(const EncapsulationFactory<precision, vector>& other) = default;
-        EncapsulationFactory<precision, vector>&
-        operator=(EncapsulationFactory<precision, vector>&& other) = default;
+        EncapsulationFactory<EncapsulationTrait>& operator=(const EncapsulationFactory<EncapsulationTrait>& other) = default;
+        EncapsulationFactory<EncapsulationTrait>& operator=(EncapsulationFactory<EncapsulationTrait>&& other) = default;
 
-        virtual shared_ptr<Encapsulation<precision, vector>> create();
+        virtual shared_ptr<Encapsulation<EncapsulationTrait>> create();
 
         virtual void set_size(const size_t& size);
         virtual size_t size() const;

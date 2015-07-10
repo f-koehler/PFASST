@@ -3,14 +3,17 @@
 #include <pfasst/controller/interface.hpp>
 using pfasst::Controller;
 
+#include <pfasst/encap/traits.hpp>
 #include <pfasst/encap/vector.hpp>
-using pfasst::encap::VectorEncapsulation;
+typedef pfasst::vector_encap_traits<double, double> VectorEncapTrait;
+typedef pfasst::encap::Encapsulation<VectorEncapTrait> VectorEncapsulation;
+
 #include <pfasst/sweeper/interface.hpp>
 using pfasst::Sweeper;
 
 #include "sweeper/mocks.hpp"
 
-typedef typename Controller<double, VectorEncapsulation<double>>::LevelIterator LevelIter;
+typedef typename Controller<double, VectorEncapsulation>::LevelIterator LevelIter;
 
 typedef ::testing::Types<LevelIter> LevelIteratorTypes;
 INSTANTIATE_TYPED_TEST_CASE_P(LevelIterator, Concepts, LevelIteratorTypes);
@@ -22,11 +25,11 @@ class Interface
   protected:
     LevelIter level_iter;
 
-    shared_ptr<Controller<double, VectorEncapsulation<double>>> controller;
+    shared_ptr<Controller<double, VectorEncapsulation>> controller;
 
     virtual void SetUp()
     {
-      this->controller = make_shared<Controller<double, VectorEncapsulation<double>>>();
+      this->controller = make_shared<Controller<double, VectorEncapsulation>>();
     }
 };
 
@@ -73,17 +76,17 @@ class Iterating
   protected:
     LevelIter level_iter;
 
-    shared_ptr<Controller<double, VectorEncapsulation<double>>> controller;
-    shared_ptr<Sweeper<double, VectorEncapsulation<double>>> sweeper_finest;
-    shared_ptr<Sweeper<double, VectorEncapsulation<double>>> sweeper_intermediate;
-    shared_ptr<Sweeper<double, VectorEncapsulation<double>>> sweeper_coarsest;
+    shared_ptr<Controller<double, VectorEncapsulation>> controller;
+    shared_ptr<Sweeper<double, VectorEncapsulation>> sweeper_finest;
+    shared_ptr<Sweeper<double, VectorEncapsulation>> sweeper_intermediate;
+    shared_ptr<Sweeper<double, VectorEncapsulation>> sweeper_coarsest;
 
     virtual void SetUp()
     {
-      this->controller = make_shared<Controller<double, VectorEncapsulation<double>>>();
-      this->sweeper_finest = make_shared<Sweeper<double, VectorEncapsulation<double>>>();
-      this->sweeper_intermediate = make_shared<Sweeper<double, VectorEncapsulation<double>>>();
-      this->sweeper_coarsest = make_shared<Sweeper<double, VectorEncapsulation<double>>>();
+      this->controller = make_shared<Controller<double, VectorEncapsulation>>();
+      this->sweeper_finest = make_shared<Sweeper<double, VectorEncapsulation>>();
+      this->sweeper_intermediate = make_shared<Sweeper<double, VectorEncapsulation>>();
+      this->sweeper_coarsest = make_shared<Sweeper<double, VectorEncapsulation>>();
       this->controller->add_sweeper(this->sweeper_finest);
       this->controller->add_sweeper(this->sweeper_intermediate);
       this->controller->add_sweeper(this->sweeper_coarsest);
