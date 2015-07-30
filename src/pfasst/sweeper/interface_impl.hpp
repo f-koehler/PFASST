@@ -22,6 +22,7 @@ namespace pfasst
       , _end_state(nullptr)
       , _tau(0)
       , _residuals(0)
+      , _status(nullptr)
       , _abs_residual_tol(0.0)
       , _rel_residual_tol(0.0)
   {}
@@ -38,6 +39,20 @@ namespace pfasst
   Sweeper<SweeperTrait, Enabled>::get_quadrature() const
   {
     return this->_quadrature;
+  }
+
+  template<class SweeperTrait, typename Enabled>
+  shared_ptr<Status<typename SweeperTrait::time_type>>&
+  Sweeper<SweeperTrait, Enabled>::status()
+  {
+    return this->_status;
+  }
+
+  template<class SweeperTrait, typename Enabled>
+  const shared_ptr<Status<typename SweeperTrait::time_type>>
+  Sweeper<SweeperTrait, Enabled>::get_status() const
+  {
+    return this->_status;
   }
 
   template<class SweeperTrait, typename Enabled>
@@ -188,9 +203,7 @@ namespace pfasst
     generate(this->tau().begin(), this->tau().end(),
              bind(&traits::encap_type::factory_type::create, this->get_encap_factory()));
 
-    // residuals have one more entry than nodes
-    //   the additional is for the end state (which might be a copy of `_states.back()`)
-    this->residuals().resize(num_nodes + 1);
+    this->residuals().resize(num_nodes);
     generate(this->residuals().begin(), this->residuals().end(),
              bind(&traits::encap_type::factory_type::create, this->get_encap_factory()));
   }
@@ -198,7 +211,13 @@ namespace pfasst
   template<class SweeperTrait, typename Enabled>
   void
   Sweeper<SweeperTrait, Enabled>::pre_predict()
-  {}
+  {
+    if (this->get_quadrature()->left_is_node()) {
+      assert(this->get_initial_state() != nullptr);
+
+      this->states()[0] = this->get_initial_state();
+    }
+  }
 
   template<class SweeperTrait, typename Enabled>
   void
@@ -211,7 +230,7 @@ namespace pfasst
   void
   Sweeper<SweeperTrait, Enabled>::post_predict()
   {
-    this->integrate_end_state();
+    this->integrate_end_state(this->get_status()->get_dt());
   }
 
   template<class SweeperTrait, typename Enabled>
@@ -230,7 +249,7 @@ namespace pfasst
   void
   Sweeper<SweeperTrait, Enabled>::post_sweep()
   {
-    this->integrate_end_state();
+    this->integrate_end_state(this->get_status()->get_dt());
   }
 
   template<class SweeperTrait, typename Enabled>
@@ -305,8 +324,9 @@ namespace pfasst
 
   template<class SweeperTrait, typename Enabled>
   void
-  Sweeper<SweeperTrait, Enabled>::integrate_end_state()
+  Sweeper<SweeperTrait, Enabled>::integrate_end_state(const typename SweeperTrait::time_type& dt)
   {
+    UNUSED(dt);
     assert(this->get_quadrature() != nullptr);
 
     if (this->get_quadrature()->right_is_node()) {

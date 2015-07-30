@@ -27,7 +27,7 @@ namespace pfasst
       size_t num_expl_f_evals;
       size_t num_impl_f_evals;
 
-      virtual void integrate_end_state();
+      virtual void integrate_end_state(const typename SweeperTrait::time_type& dt);
       virtual void compute_residuals();
 
       virtual shared_ptr<typename SweeperTrait::encap_type> evaluate_rhs_expl(const typename SweeperTrait::time_type& t,

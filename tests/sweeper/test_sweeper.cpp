@@ -12,6 +12,7 @@ typedef pfasst::vector_encap_traits<double, double> VectorEncapTrait;
 typedef pfasst::encap::Encapsulation<VectorEncapTrait> VectorEncapsulation;
 
 #include "quadrature/mocks.hpp"
+#include "controller/mocks.hpp"
 
 
 typedef ::testing::Types<Sweeper<pfasst::sweeper_traits<VectorEncapTrait>>> SweeperTypes;

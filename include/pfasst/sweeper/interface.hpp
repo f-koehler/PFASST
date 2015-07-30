@@ -47,10 +47,11 @@ namespace pfasst
       vector<shared_ptr<typename traits::encap_type>>        _tau;
       vector<shared_ptr<typename traits::encap_type>>        _residuals;
 
+      shared_ptr<Status<typename traits::time_type>>         _status;
       typename traits::spacial_type                          _abs_residual_tol;
       typename traits::spacial_type                          _rel_residual_tol;
 
-      virtual void integrate_end_state();
+      virtual void integrate_end_state(const typename SweeperTrait::time_type& dt);
       virtual void compute_residuals();
 
       virtual vector<shared_ptr<typename SweeperTrait::encap_type>>& previous_states();
@@ -67,6 +68,9 @@ namespace pfasst
 
       virtual       shared_ptr<IQuadrature<typename SweeperTrait::time_type>>& quadrature();
       virtual const shared_ptr<IQuadrature<typename SweeperTrait::time_type>>  get_quadrature() const;
+
+      virtual       shared_ptr<Status<typename SweeperTrait::time_type>>& status();
+      virtual const shared_ptr<Status<typename SweeperTrait::time_type>>  get_status() const;
 
       virtual       shared_ptr<typename SweeperTrait::encap_type::factory_type>& encap_factory();
       virtual const shared_ptr<typename SweeperTrait::encap_type::factory_type>  get_encap_factory() const;
