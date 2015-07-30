@@ -2,19 +2,19 @@
 
 namespace pfasst
 {
-  template<typename precision, class EncapT>
-  IMEX<precision, EncapT>::IMEX()
-    :   Sweeper<precision, EncapT>()
+  template<class SweeperTrait, typename Enabled>
+  IMEX<SweeperTrait, Enabled>::IMEX()
+    :   Sweeper<SweeperTrait, Enabled>()
       , _s_integrals(0)
       , _expl_rhs(0)
       , _impl_rhs(0)
   {}
 
-  template<typename precision, class EncapT>
+  template<class SweeperTrait, typename Enabled>
   void
-  IMEX<precision, EncapT>::setup()
+  IMEX<SweeperTrait, Enabled>::setup()
   {
-    pfasst::Sweeper<precision, EncapT>::setup();
+    pfasst::Sweeper<SweeperTrait, Enabled>::setup();
     const auto num_nodes = this->quadrature()->get_num_nodes();
 
     this->_s_integrals.resize(num_nodes);
@@ -30,73 +30,77 @@ namespace pfasst
              bind(&encap_type::factory_type::create, this->encap_factory()));
   }
 
-  template<typename precision, class EncapT>
+  template<class SweeperTrait, typename Enabled>
   void
-  IMEX<precision, EncapT>::pre_predict()
+  IMEX<SweeperTrait, Enabled>::pre_predict()
   {}
 
-  template<typename precision, class EncapT>
+  template<class SweeperTrait, typename Enabled>
   void
-  IMEX<precision, EncapT>::predict()
+  IMEX<SweeperTrait, Enabled>::predict()
   {}
 
-  template<typename precision, class EncapT>
+  template<class SweeperTrait, typename Enabled>
   void
-  IMEX<precision, EncapT>::post_predict()
+  IMEX<SweeperTrait, Enabled>::post_predict()
   {}
 
-  template<typename precision, class EncapT>
+  template<class SweeperTrait, typename Enabled>
   void
-  IMEX<precision, EncapT>::pre_sweep()
+  IMEX<SweeperTrait, Enabled>::pre_sweep()
   {}
 
-  template<typename precision, class EncapT>
+  template<class SweeperTrait, typename Enabled>
   void
-  IMEX<precision, EncapT>::sweep()
+  IMEX<SweeperTrait, Enabled>::sweep()
   {}
 
-  template<typename precision, class EncapT>
+  template<class SweeperTrait, typename Enabled>
   void
-  IMEX<precision, EncapT>::post_sweep()
+  IMEX<SweeperTrait, Enabled>::post_sweep()
   {}
 
-  template<typename precision, class EncapT>
+  template<class SweeperTrait, typename Enabled>
   void
-  IMEX<precision, EncapT>::advance()
+  IMEX<SweeperTrait, Enabled>::advance()
   {}
 
-  template<typename precision, class EncapT>
+  template<class SweeperTrait, typename Enabled>
   void
-  IMEX<precision, EncapT>::reevaluate(const bool initial_only)
+  IMEX<SweeperTrait, Enabled>::reevaluate(const bool initial_only)
   {
-    
+    // TODO
   }
 
 
-  template<typename precision, class EncapT>
+  template<class SweeperTrait, typename Enabled>
   void
-  IMEX<precision, EncapT>::integrate_end_state()
+  IMEX<SweeperTrait, Enabled>::integrate_end_state()
   {}
 
-  template<typename precision, class EncapT>
+  template<class SweeperTrait, typename Enabled>
   void
-  IMEX<precision, EncapT>::compute_residuals()
+  IMEX<SweeperTrait, Enabled>::compute_residuals()
   {}
 
-  template<typename precision, class EncapT>
-  shared_ptr<EncapT>
-  IMEX<precision, EncapT>::evaluate_rhs_expl(const precision& t, const shared_ptr<EncapT> u)
+  template<class SweeperTrait, typename Enabled>
+  shared_ptr<typename SweeperTrait::encap_type>
+  IMEX<SweeperTrait, Enabled>::evaluate_rhs_expl(const typename SweeperTrait::time_type& t,
+                                                 const shared_ptr<typename SweeperTrait::encap_type> u)
   {}
 
-  template<typename precision, class EncapT>
-  shared_ptr<EncapT>
-  IMEX<precision, EncapT>::evaluate_rhs_impl(const precision& t, const shared_ptr<EncapT> u)
+  template<class SweeperTrait, typename Enabled>
+  shared_ptr<typename SweeperTrait::encap_type>
+  IMEX<SweeperTrait, Enabled>::evaluate_rhs_impl(const typename SweeperTrait::time_type& t,
+                                                 const shared_ptr<typename SweeperTrait::encap_type> u)
   {}
 
-  template<typename precision, class EncapT>
+  template<class SweeperTrait, typename Enabled>
   void
-  IMEX<precision, EncapT>::implicit_solve(shared_ptr<EncapT> f, shared_ptr<EncapT> u,
-                                          const precision& t, const precision& dt,
-                                          const shared_ptr<EncapT> rhs)
+  IMEX<SweeperTrait, Enabled>::implicit_solve(shared_ptr<typename SweeperTrait::encap_type> f,
+                                              shared_ptr<typename SweeperTrait::encap_type> u,
+                                              const typename SweeperTrait::time_type& t,
+                                              const typename SweeperTrait::time_type& dt,
+                                              const shared_ptr<typename SweeperTrait::encap_type> rhs)
   {}
 }  // ::pfasst

@@ -14,7 +14,7 @@ typedef pfasst::encap::Encapsulation<VectorEncapTrait> VectorEncapsulation;
 #include "quadrature/mocks.hpp"
 
 
-typedef ::testing::Types<Sweeper<double, VectorEncapsulation>> SweeperTypes;
+typedef ::testing::Types<Sweeper<pfasst::sweeper_traits<VectorEncapTrait>>> SweeperTypes;
 INSTANTIATE_TYPED_TEST_CASE_P(Sweeper, Concepts, SweeperTypes);
 
 
@@ -22,8 +22,8 @@ class Setup
   : public ::testing::Test
 {
   protected:
-    typedef          Sweeper<double, VectorEncapsulation> sweeper_type;
-    typedef typename sweeper_type::encap_type             encap_type;
+    typedef          Sweeper<pfasst::sweeper_traits<VectorEncapTrait>> sweeper_type;
+    typedef typename sweeper_type::encap_type                          encap_type;
 
     sweeper_type sweeper;
 
@@ -92,8 +92,8 @@ class DataAccess
   : public ::testing::Test
 {
   protected:
-    typedef          Sweeper<double, VectorEncapsulation> sweeper_type;
-    typedef typename sweeper_type::encap_type             encap_type;
+    typedef          Sweeper<pfasst::sweeper_traits<VectorEncapTrait>> sweeper_type;
+    typedef typename sweeper_type::encap_type                          encap_type;
 
     sweeper_type sweeper;
 
@@ -157,8 +157,8 @@ class Interface
   : public ::testing::Test
 {
   protected:
-    typedef          Sweeper<double, VectorEncapsulation> sweeper_type;
-    typedef typename sweeper_type::encap_type             encap_type;
+    typedef          Sweeper<pfasst::sweeper_traits<VectorEncapTrait>> sweeper_type;
+    typedef typename sweeper_type::encap_type                          encap_type;
 
     sweeper_type sweeper;
 };
@@ -202,8 +202,8 @@ class Logic
   : public ::testing::Test
 {
   protected:
-    typedef          Sweeper<double, VectorEncapsulation> sweeper_type;
-    typedef typename sweeper_type::encap_type             encap_type;
+    typedef          Sweeper<pfasst::sweeper_traits<VectorEncapTrait>> sweeper_type;
+    typedef typename sweeper_type::encap_type                          encap_type;
 
     sweeper_type sweeper;
 

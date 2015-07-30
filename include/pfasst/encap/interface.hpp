@@ -35,6 +35,7 @@ namespace pfasst
     class EncapsulationFactory;
 
 
+    //! a*x + y
     template<
       class EncapsulationTrait
     >
@@ -43,13 +44,25 @@ namespace pfasst
          const shared_ptr<Encapsulation<EncapsulationTrait>> x,
          const shared_ptr<Encapsulation<EncapsulationTrait>> y);
 
+    //! x = a*matrix*y
+    template<
+      class EncapsulationTrait
+    >
+    void
+    mat_apply(vector<shared_ptr<Encapsulation<EncapsulationTrait>>>& x,
+              const typename EncapsulationTrait::time_type& a,
+              const Matrix<typename EncapsulationTrait::time_type>& matrix,
+              const vector<shared_ptr<Encapsulation<EncapsulationTrait>>>& y,
+              const bool zero_vec_x = true);
+
+    //! a*matrix*x
     template<
       class EncapsulationTrait
     >
     vector<shared_ptr<Encapsulation<EncapsulationTrait>>>
-    mat_apply(const typename EncapsulationTrait::time_type& a,
-              const Matrix<typename EncapsulationTrait::time_type>& M,
-              const vector<shared_ptr<Encapsulation<EncapsulationTrait>>>& x);
+    mat_mul_vec(const typename EncapsulationTrait::time_type& a,
+                const Matrix<typename EncapsulationTrait::time_type>& matrix,
+                const vector<shared_ptr<Encapsulation<EncapsulationTrait>>>& x);
 
     template<
       class EncapsulationTrait
@@ -110,8 +123,9 @@ namespace pfasst
         virtual const typename EncapsulationTrait::data_type& get_data() const;
 
         virtual void zero();
-        virtual void axpy(const typename EncapsulationTrait::time_type& a,
-                          const shared_ptr<Encapsulation<EncapsulationTrait>> y);
+        //! this += a*y
+        virtual void scaled_add(const typename EncapsulationTrait::time_type& a,
+                                const shared_ptr<Encapsulation<EncapsulationTrait>> y);
 
         virtual typename EncapsulationTrait::spacial_type norm0() const;
 

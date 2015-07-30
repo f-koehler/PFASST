@@ -6,12 +6,13 @@ using pfasst::Transfer;
 #include <pfasst/encap/traits.hpp>
 #include <pfasst/encap/vector.hpp>
 typedef pfasst::vector_encap_traits<double, double> VectorEncapTrait;
-typedef pfasst::encap::Encapsulation<VectorEncapTrait> VectorEncapsulation;
 
-#include "sweeper/mocks.hpp"
-typedef SweeperMock<double, VectorEncapsulation> Sweeper;
+// #include "sweeper/mocks.hpp"
+// typedef SweeperMock<double, VectorEncapsulation> Sweeper;
+#include "pfasst/sweeper/interface.hpp"
+typedef pfasst::Sweeper<pfasst::sweeper_traits<VectorEncapTrait>> Sweeper;
 
-typedef ::testing::Types<Transfer<Sweeper, Sweeper>> TransferTypes;
+typedef ::testing::Types<Transfer<pfasst::transfer_traits<Sweeper, Sweeper>>> TransferTypes;
 INSTANTIATE_TYPED_TEST_CASE_P(Transfer, Concepts, TransferTypes);
 
 
@@ -19,14 +20,14 @@ class Interface
   : public ::testing::Test
 {
   protected:
-    typedef Transfer<Sweeper, Sweeper> transfer_type;
-    typedef VectorEncapsulation        encap_type;
+    typedef Transfer<pfasst::transfer_traits<Sweeper, Sweeper>> transfer_type;
+    typedef pfasst::encap::VectorEncapsulation<double, double>  encap_type;
 
-    transfer_type                   transfer;
-    shared_ptr<Sweeper>             coarse_sweeper;
-    shared_ptr<Sweeper>             fine_sweeper;
-    shared_ptr<VectorEncapsulation> coarse_encap;
-    shared_ptr<VectorEncapsulation> fine_encap;
+    transfer_type          transfer;
+    shared_ptr<Sweeper>    coarse_sweeper;
+    shared_ptr<Sweeper>    fine_sweeper;
+    shared_ptr<encap_type> coarse_encap;
+    shared_ptr<encap_type> fine_encap;
 };
 
 TEST_F(Interface, no_implementation_of_interpolation_of_initial_value)
@@ -43,7 +44,7 @@ TEST_F(Interface, no_implementation_of_interpolation)
 
 TEST_F(Interface, no_implementation_of_interpolating_encaps)
 {
-  EXPECT_THROW(transfer.interpolate(coarse_encap, fine_encap), pfasst::NotImplementedYet);
+  EXPECT_THROW(transfer.interpolate_data(coarse_encap, fine_encap), pfasst::NotImplementedYet);
 }
 
 TEST_F(Interface, no_implementation_of_restriction_of_initial_value)
@@ -60,7 +61,7 @@ TEST_F(Interface, no_implementation_of_restriction)
 
 TEST_F(Interface, no_implementation_of_restricting_encaps)
 {
-  EXPECT_THROW(transfer.restrict(coarse_encap, fine_encap), pfasst::NotImplementedYet);
+  EXPECT_THROW(transfer.restrict_data(coarse_encap, fine_encap), pfasst::NotImplementedYet);
 }
 
 TEST_F(Interface, no_implementation_of_fas_correction)

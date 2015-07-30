@@ -394,6 +394,7 @@ namespace pfasst
         add_custom_logger("CONTROL");
         add_custom_logger("COMM");
         add_custom_logger("SWEEPER");
+        add_custom_logger("TRANS");
         add_custom_logger("ENCAP");
         add_custom_logger("QUAD");
         add_custom_logger("USER");

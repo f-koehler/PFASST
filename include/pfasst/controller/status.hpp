@@ -63,6 +63,9 @@ namespace pfasst
         precision time;
         precision dt;
 
+        precision t_end;
+        size_t    max_iterations;
+
         State     state;
         precision residual;
       } _detail;
@@ -81,11 +84,17 @@ namespace pfasst
       virtual size_t& iteration();
       virtual size_t  get_iteration() const;
 
+      virtual size_t& max_iterations();
+      virtual size_t  get_max_iterations() const;
+
       virtual precision& time();
       virtual precision  get_time() const;
 
       virtual precision& dt();
       virtual precision  get_dt() const;
+
+      virtual precision& t_end();
+      virtual precision  get_t_end() const;
 
       virtual State& state();
       virtual State  get_state() const;

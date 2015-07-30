@@ -6,8 +6,9 @@
 #include <vector>
 using namespace std;
 
+#include "pfasst/sweeper/traits.hpp"
 #include "pfasst/comm/interface.hpp"
-#include "pfasst/controller/interface.hpp"
+#include "pfasst/controller/status.hpp"
 #include "pfasst/encap/interface.hpp"
 #include "pfasst/quadrature.hpp"
 using pfasst::quadrature::IQuadrature;
@@ -16,77 +17,74 @@ using pfasst::quadrature::IQuadrature;
 namespace pfasst
 {
   template<
-    typename precision,
-    class EncapT
+    class SweeperTrait,
+    typename Enabled = void
   >
   class Sweeper
-    : public enable_shared_from_this<Sweeper<precision, EncapT>>
+    : public enable_shared_from_this<Sweeper<SweeperTrait, Enabled>>
   {
-    static_assert(is_arithmetic<precision>::value,
-                  "precision type must be arithmetic");
-    static_assert(is_constructible<EncapT>::value,
-                  "data type must be constructible");
-    static_assert(is_destructible<EncapT>::value,
-                  "data type must be destructible");
-
     public:
-      typedef precision   precision_type;
-      typedef EncapT      encap_type;
+      typedef          SweeperTrait traits;
+      // TODO: get rid of mirroring and query trait directly in code
+      typedef typename traits::encap_type encap_type;
+
+    static_assert(is_arithmetic<typename traits::time_type>::value,
+                  "precision type must be arithmetic");
+    static_assert(is_constructible<typename traits::encap_type>::value,
+                  "Encapsulation type must be constructible");
+    static_assert(is_destructible<typename traits::encap_type>::value,
+                  "Encapsulation type must be destructible");
 
     protected:
-      shared_ptr<Controller<precision, EncapT>>      _controller;
-      shared_ptr<IQuadrature<precision>>             _quadrature;
-      shared_ptr<typename encap_type::factory_type>  _factory;
+      shared_ptr<IQuadrature<typename traits::time_type>>    _quadrature;
+      shared_ptr<typename traits::encap_type::factory_type>  _factory;
 
-      shared_ptr<encap_type>                         _initial_state;
-      vector<shared_ptr<encap_type>>                 _states;
-      vector<shared_ptr<encap_type>>                 _previous_states;
-      shared_ptr<encap_type>                         _end_state;
+      shared_ptr<typename traits::encap_type>                _initial_state;
+      vector<shared_ptr<typename traits::encap_type>>        _states;
+      vector<shared_ptr<typename traits::encap_type>>        _previous_states;
+      shared_ptr<typename traits::encap_type>                _end_state;
 
-      vector<shared_ptr<encap_type>>                 _tau;
-      vector<shared_ptr<encap_type>>                 _residuals;
+      vector<shared_ptr<typename traits::encap_type>>        _tau;
+      vector<shared_ptr<typename traits::encap_type>>        _residuals;
 
-      precision_type                                 _abs_residual_tol;
-      precision_type                                 _rel_residual_tol;
+      typename traits::spacial_type                          _abs_residual_tol;
+      typename traits::spacial_type                          _rel_residual_tol;
 
       virtual void integrate_end_state();
       virtual void compute_residuals();
 
-      virtual vector<shared_ptr<EncapT>>& states();
-      virtual vector<shared_ptr<EncapT>>& previous_states();
-      virtual shared_ptr<EncapT>&         end_state();
-      virtual vector<shared_ptr<EncapT>>& residuals();
+      virtual vector<shared_ptr<typename SweeperTrait::encap_type>>& previous_states();
+      virtual shared_ptr<typename SweeperTrait::encap_type>&         end_state();
+      virtual vector<shared_ptr<typename SweeperTrait::encap_type>>& residuals();
 
     public:
       explicit Sweeper();
-      Sweeper(const Sweeper<precision, EncapT>& other) = default;
-      Sweeper(Sweeper<precision, EncapT>&& other) = default;
+      Sweeper(const Sweeper<SweeperTrait, Enabled>& other) = default;
+      Sweeper(Sweeper<SweeperTrait, Enabled>&& other) = default;
       virtual ~Sweeper() = default;
-      Sweeper<precision, EncapT>& operator=(const Sweeper<precision, EncapT>& other) = default;
-      Sweeper<precision, EncapT>& operator=(Sweeper<precision, EncapT>&& other) = default;
+      Sweeper<SweeperTrait, Enabled>& operator=(const Sweeper<SweeperTrait, Enabled>& other) = default;
+      Sweeper<SweeperTrait, Enabled>& operator=(Sweeper<SweeperTrait, Enabled>&& other) = default;
 
-      virtual       shared_ptr<IQuadrature<precision>>& quadrature();
-      virtual const shared_ptr<IQuadrature<precision>>  get_quadrature() const;
+      virtual       shared_ptr<IQuadrature<typename SweeperTrait::time_type>>& quadrature();
+      virtual const shared_ptr<IQuadrature<typename SweeperTrait::time_type>>  get_quadrature() const;
 
-      virtual       shared_ptr<typename EncapT::factory_type>& encap_factory();
-      virtual const shared_ptr<typename EncapT::factory_type>  get_encap_factory() const;
+      virtual       shared_ptr<typename SweeperTrait::encap_type::factory_type>& encap_factory();
+      virtual const shared_ptr<typename SweeperTrait::encap_type::factory_type>  get_encap_factory() const;
 
-      virtual       shared_ptr<Controller<precision, EncapT>>& controller();
-      virtual const shared_ptr<Controller<precision, EncapT>>  get_controller() const;
+      virtual       shared_ptr<typename SweeperTrait::encap_type>&         initial_state();
+      virtual       vector<shared_ptr<typename SweeperTrait::encap_type>>& states();
+      virtual       vector<shared_ptr<typename SweeperTrait::encap_type>>& tau();
 
-      virtual       shared_ptr<EncapT>&         initial_state();
-      virtual       vector<shared_ptr<EncapT>>& tau();
-
-      virtual const shared_ptr<EncapT>          get_initial_state() const;
-      virtual const vector<shared_ptr<EncapT>>  get_states() const;
-      virtual const vector<shared_ptr<EncapT>>  get_previous_states() const;
-      virtual const shared_ptr<EncapT>          get_end_state() const;
-      virtual const vector<shared_ptr<EncapT>>  get_tau() const;
-      virtual const vector<shared_ptr<EncapT>>  get_residuals() const;
+      virtual const shared_ptr<typename SweeperTrait::encap_type>          get_initial_state() const;
+      virtual const vector<shared_ptr<typename SweeperTrait::encap_type>>  get_states() const;
+      virtual const vector<shared_ptr<typename SweeperTrait::encap_type>>  get_previous_states() const;
+      virtual const shared_ptr<typename SweeperTrait::encap_type>          get_end_state() const;
+      virtual const vector<shared_ptr<typename SweeperTrait::encap_type>>  get_tau() const;
+      virtual const vector<shared_ptr<typename SweeperTrait::encap_type>>  get_residuals() const;
 
       virtual void set_options();
-      virtual void set_abs_residual_tol(const precision& abs_res_tol);
-      virtual void set_rel_residual_tol(const precision& rel_res_tol);
+      virtual void set_abs_residual_tol(const typename SweeperTrait::spacial_type& abs_res_tol);
+      virtual void set_rel_residual_tol(const typename SweeperTrait::spacial_type& rel_res_tol);
 
       virtual void setup();
 
@@ -103,6 +101,8 @@ namespace pfasst
       virtual void spread();
       virtual void save();
       virtual void reevaluate(const bool initial_only=false);
+      virtual vector<shared_ptr<typename SweeperTrait::encap_type>> integrate(const typename SweeperTrait::time_type& dt);
+
       virtual bool converged();
   };
 }

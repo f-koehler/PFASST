@@ -51,8 +51,9 @@ namespace pfasst
         virtual const typename EncapsulationTrait::data_type& get_data() const;
 
         virtual void zero();
-        virtual void axpy(const typename EncapsulationTrait::time_type& a,
-                          const shared_ptr<Encapsulation<EncapsulationTrait>> y);
+        //! this += a*y
+        virtual void scale_add(const typename EncapsulationTrait::time_type& a,
+                               const shared_ptr<Encapsulation<EncapsulationTrait>> y);
 
         virtual typename EncapsulationTrait::spacial_type norm0() const;
 
@@ -62,6 +63,12 @@ namespace pfasst
                           const bool blocking);
         virtual void bcast(shared_ptr<comm::Communicator> comm, const int root_rank);
     };
+
+    template<
+      typename time_precision,
+      typename spacial_precision
+    >
+    using VectorEncapsulation = Encapsulation<vector_encap_traits<time_precision, spacial_precision>>;
 
 
     template<

@@ -7,8 +7,7 @@ include_directories(
 )
 
 set(TESTS
-    test_controller
-    test_status
+    test_fft
 )
 
 foreach(test ${TESTS})
@@ -32,6 +31,6 @@ foreach(test ${TESTS})
         )
     endif()
     add_test(NAME ${test}
-        COMMAND ${CMAKE_BINARY_DIR}/tests/controller/${test} --gtest_output=xml:${test}_out.xml
+        COMMAND ${CMAKE_BINARY_DIR}/tests/contrib/${test} --gtest_output=xml:${test}_out.xml
     )
 endforeach(test)

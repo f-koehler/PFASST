@@ -36,6 +36,7 @@ foreach(test ${TESTS})
     )
 endforeach(test)
 
+add_subdirectory(contrib)
 add_subdirectory(quadrature)
 add_subdirectory(comm)
 add_subdirectory(encap)

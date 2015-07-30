@@ -7,15 +7,17 @@
 namespace pfasst
 {
   template<
-    typename precision,
-    class EncapT
+    class SweeperTrait,
+    typename Enabled = void
   >
   class IMEX
-    : public Sweeper<precision, EncapT>
+    : public Sweeper<SweeperTrait, Enabled>
   {
     public:
-      typedef precision precision_type;
-      typedef EncapT    encap_type;
+      typedef          SweeperTrait                 sweeper_traits;
+      typedef typename sweeper_traits::encap_type   encap_type;
+      typedef typename sweeper_traits::time_type    time_type;
+      typedef typename sweeper_traits::spacial_type spacial_type;
 
     protected:
       vector<shared_ptr<encap_type>> _s_integrals;
@@ -28,22 +30,24 @@ namespace pfasst
       virtual void integrate_end_state();
       virtual void compute_residuals();
 
-      virtual shared_ptr<EncapT> evaluate_rhs_expl(const precision& t,
-                                                   const shared_ptr<EncapT> u);
-      virtual shared_ptr<EncapT> evaluate_rhs_impl(const precision& t,
-                                                   const shared_ptr<EncapT> u);
+      virtual shared_ptr<typename SweeperTrait::encap_type> evaluate_rhs_expl(const typename SweeperTrait::time_type& t,
+                                                                              const shared_ptr<typename SweeperTrait::encap_type> u);
+      virtual shared_ptr<typename SweeperTrait::encap_type> evaluate_rhs_impl(const typename SweeperTrait::time_type& t,
+                                                                              const shared_ptr<typename SweeperTrait::encap_type> u);
 
-      virtual void implicit_solve(shared_ptr<EncapT> f, shared_ptr<EncapT> u,
-                                  const precision& t, const precision& dt,
-                                  const shared_ptr<EncapT> rhs);
+      virtual void implicit_solve(shared_ptr<typename SweeperTrait::encap_type> f,
+                                  shared_ptr<typename SweeperTrait::encap_type> u,
+                                  const typename SweeperTrait::time_type& t,
+                                  const typename SweeperTrait::time_type& dt,
+                                  const shared_ptr<typename SweeperTrait::encap_type> rhs);
 
     public:
       explicit IMEX();
-      IMEX(const IMEX<precision, EncapT>& other) = default;
-      IMEX(IMEX<precision, EncapT>&& other) = default;
+      IMEX(const IMEX<SweeperTrait, Enabled>& other) = default;
+      IMEX(IMEX<SweeperTrait, Enabled>&& other) = default;
       virtual ~IMEX() = default;
-      IMEX<precision, EncapT>& operator=(const IMEX<precision, EncapT>& other) = default;
-      IMEX<precision, EncapT>& operator=(IMEX<precision, EncapT>&& other) = default;
+      IMEX<SweeperTrait, Enabled>& operator=(const IMEX<SweeperTrait, Enabled>& other) = default;
+      IMEX<SweeperTrait, Enabled>& operator=(IMEX<SweeperTrait, Enabled>&& other) = default;
 
       virtual void setup();
 

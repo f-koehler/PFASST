@@ -42,6 +42,18 @@ namespace pfasst
   }
 
   template<typename precision>
+  size_t Status<precision>::get_max_iterations() const
+  {
+    return this->_detail.max_iterations;
+  }
+
+  template<typename precision>
+  size_t& Status<precision>::max_iterations()
+  {
+    return this->_detail.max_iterations;
+  }
+
+  template<typename precision>
   precision Status<precision>::get_time() const
   {
     return this->_detail.time;
@@ -63,6 +75,18 @@ namespace pfasst
   precision& Status<precision>::dt()
   {
     return this->_detail.dt;
+  }
+
+  template<typename precision>
+  precision Status<precision>::get_t_end() const
+  {
+    return this->_detail.t_end;
+  }
+
+  template<typename precision>
+  precision& Status<precision>::t_end()
+  {
+    return this->_detail.t_end;
   }
 
   template<typename precision>

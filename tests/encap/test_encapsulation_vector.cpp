@@ -67,8 +67,8 @@ TEST(Operation, in_place_axpy)
   shared_ptr<VectorEncapsulation> vec_y = \
     make_shared<VectorEncapsulation>(vector<double>{1.0, 1.0, 1.0});
 
-  vec_x.axpy(0.5, vec_y);
-  EXPECT_THAT(vec_x.get_data(), Pointwise(Eq(), vector<double>{1.5, 2.0, 2.5}));
+  vec_x.scale_add(0.5, vec_y);
+  EXPECT_THAT(vec_x.get_data(), Pointwise(Eq(), vector<double>{1.5, 2.5, 3.5}));
 }
 
 TEST(Operation, global_axpy)
@@ -107,10 +107,18 @@ TEST(MatrixApplication, identity)
   });
   Matrix<double> mat = Matrix<double>::Identity(3, 3);
 
-  auto result = pfasst::encap::mat_apply(1.0, mat, vec);
-  for_each(result.cbegin(), result.cend(), [data](const shared_ptr<VectorEncapsulation>& xi) {
-    EXPECT_THAT(xi->get_data(), Pointwise(Eq(), data));
-  });
+  auto result_mat_mul_vec = pfasst::encap::mat_mul_vec(1.0, mat, vec);
+  for_each(result_mat_mul_vec.cbegin(), result_mat_mul_vec.cend(),
+           [data](const shared_ptr<VectorEncapsulation>& xi) {
+             EXPECT_THAT(xi->get_data(), Pointwise(Eq(), data));
+           });
+
+  vector<shared_ptr<VectorEncapsulation>> result_mat_apply(result_mat_mul_vec);
+  pfasst::encap::mat_apply(result_mat_apply, 1.0, mat, vec, true);
+  for_each(result_mat_apply.cbegin(), result_mat_apply.cend(),
+           [data](const shared_ptr<VectorEncapsulation>& xi) {
+             EXPECT_THAT(xi->get_data(), Pointwise(Eq(), data));
+           });
 }
 
 TEST(MatrixApplication, zero_matrix)
@@ -124,10 +132,18 @@ TEST(MatrixApplication, zero_matrix)
   });
   Matrix<double> mat = Matrix<double>::Zero(3, 3);
 
-  auto result = pfasst::encap::mat_apply(1.0, mat, vec);
-  for_each(result.cbegin(), result.cend(), [](const shared_ptr<VectorEncapsulation>& xi) {
-    EXPECT_THAT(xi->get_data(), Pointwise(Eq(), vector<double>{0.0, 0.0, 0.0}));
-  });
+  auto result_mat_mul_vec = pfasst::encap::mat_mul_vec(1.0, mat, vec);
+  for_each(result_mat_mul_vec.cbegin(), result_mat_mul_vec.cend(),
+           [](const shared_ptr<VectorEncapsulation>& xi) {
+             EXPECT_THAT(xi->get_data(), Pointwise(Eq(), vector<double>{0.0, 0.0, 0.0}));
+           });
+
+  vector<shared_ptr<VectorEncapsulation>> result_mat_apply(result_mat_mul_vec);
+  pfasst::encap::mat_apply(result_mat_apply, 1.0, mat, vec, true);
+  for_each(result_mat_apply.cbegin(), result_mat_apply.cend(),
+           [data](const shared_ptr<VectorEncapsulation>& xi) {
+             EXPECT_THAT(xi->get_data(), Pointwise(Eq(), vector<double>{0.0, 0.0, 0.0}));
+           });
 }
 
 TEST(MatrixApplication, all_ones)
@@ -141,10 +157,18 @@ TEST(MatrixApplication, all_ones)
   });
   Matrix<double> mat = Matrix<double>::Ones(3, 3);
 
-  auto result = pfasst::encap::mat_apply(1.0, mat, vec);
-  for_each(result.cbegin(), result.cend(), [](const shared_ptr<VectorEncapsulation>& xi) {
-    EXPECT_THAT(xi->get_data(), Pointwise(Eq(), vector<double>{3.0, 6.0, 9.0}));
-  });
+  auto result_mat_mul_vec = pfasst::encap::mat_mul_vec(1.0, mat, vec);
+  for_each(result_mat_mul_vec.cbegin(), result_mat_mul_vec.cend(),
+           [](const shared_ptr<VectorEncapsulation>& xi) {
+             EXPECT_THAT(xi->get_data(), Pointwise(Eq(), vector<double>{3.0, 6.0, 9.0}));
+           });
+
+  vector<shared_ptr<VectorEncapsulation>> result_mat_apply(result_mat_mul_vec);
+  pfasst::encap::mat_apply(result_mat_apply, 1.0, mat, vec, true);
+  for_each(result_mat_apply.cbegin(), result_mat_apply.cend(),
+           [data](const shared_ptr<VectorEncapsulation>& xi) {
+             EXPECT_THAT(xi->get_data(), Pointwise(Eq(), vector<double>{3.0, 6.0, 9.0}));
+           });
 }
 
 

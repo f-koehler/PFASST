@@ -42,6 +42,7 @@ namespace pfasst
     };
 
 
+    // TODO: get the grasp of this stuff
     template<typename precision>
     static Polynomial<precision> build_polynomial(const size_t node, const vector<precision>& nodes)
     {
