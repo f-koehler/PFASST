@@ -37,7 +37,9 @@ namespace pfasst
 
       if (zero_vec_x) {
         for_each(x.begin(), x.end(),
-                 [](shared_ptr<Encapsulation<EncapsulationTrait>> xi) { xi->zero(); });
+                 [](shared_ptr<Encapsulation<EncapsulationTrait>> xi) {
+                   xi->zero();
+                });
       }
 
       const size_t cols = mat.cols();
@@ -62,12 +64,11 @@ namespace pfasst
 
       // initialize result vector of encaps
       vector<shared_ptr<Encapsulation<EncapsulationTrait>>> result(rows);
-      transform(x.cbegin(), x.cend(), result.begin(),
-                [](const shared_ptr<Encapsulation<EncapsulationTrait>>& xi) {
-                  auto ri = make_shared<Encapsulation<EncapsulationTrait>>(xi->get_data());
-                  ri->zero();
-                  return ri;
-                });
+      for(auto& ri : result) {
+        ri = make_shared<Encapsulation<EncapsulationTrait>>();
+        ri->data() = x[0]->get_data();
+        ri->zero();
+      }
 
       mat_apply(result, a, mat, x, false);
       return result;

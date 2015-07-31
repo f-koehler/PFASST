@@ -44,7 +44,7 @@ namespace pfasst
          const shared_ptr<Encapsulation<EncapsulationTrait>> x,
          const shared_ptr<Encapsulation<EncapsulationTrait>> y);
 
-    //! x = a*matrix*y
+    //! x = x + a*matrix*y
     template<
       class EncapsulationTrait
     >

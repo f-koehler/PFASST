@@ -171,7 +171,8 @@ namespace pfasst
       restricted_and_coarse[num_coarse_nodes + m] = coarse_integral[m];
     }
 
-    this->setup_tmat(fine_nodes, coarse_nodes);
+    // TODO: FAS w.t.r. Q not S
+    this->setup_fmat(num_coarse_nodes);
 
     encap::mat_apply(coarse->tau(), 1.0, fmat, restricted_and_coarse, true);
   }
@@ -193,19 +194,21 @@ namespace pfasst
   PolynomialTransfer<TransferTraits, Enabled>::setup_fmat(const size_t& num_coarse)
   {
     if (this->fmat.rows() == 0) {
-      this->fmat.resize(num_coarse, 2 * num_coarse);
+      // XXX: +1 ?!
+      this->fmat.resize(num_coarse + 1, 2 * (num_coarse + 1));
       this->fmat.fill(0.0);
 
-      for (size_t m = 0; m < num_coarse; m++) {
+      // XXX: m=1...num_coarse ?!
+      for (size_t m = 1; m < num_coarse; m++) {
         this->fmat(m, m) = 1.0;
         this->fmat(m, num_coarse + m) = -1.0;
 
         // subtract 0-to-(m-1) FAS so resulting FAS is (m-1)-to-m FAS,
         //  which will be required in the sweeper logic
-        for (size_t n = 0; n < m; n++) {
-          this->fmat(m, n) = -1.0;
-          this->fmat(m, num_coarse + n) = 1.0;
-        }
+//         for (size_t n = 0; n < m; n++) {
+//           this->fmat(m, n) = -1.0;
+//           this->fmat(m, num_coarse + n) = 1.0;
+//         }
       }
     }
   }

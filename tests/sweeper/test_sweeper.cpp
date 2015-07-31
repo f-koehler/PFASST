@@ -57,7 +57,8 @@ TEST_F(Setup, quadrature_is_required_for_setup)
 
 TEST_F(Setup, state_data_initialized_after_setup)
 {
-  EXPECT_THAT(sweeper.initial_state(), IsNull());
+  EXPECT_THROW(sweeper.get_initial_state(), runtime_error);
+  EXPECT_THROW(sweeper.initial_state(), runtime_error);
   EXPECT_THAT(sweeper.get_end_state(), IsNull());
   EXPECT_THAT(sweeper.get_states(), IsEmpty());
   EXPECT_THAT(sweeper.get_previous_states(), IsEmpty());
@@ -68,18 +69,20 @@ TEST_F(Setup, state_data_initialized_after_setup)
   auto num_nodes = quadrature->get_num_nodes();
   sweeper.setup();
 
+  EXPECT_THAT(sweeper.get_status(), IsNull());
+
   EXPECT_THAT(sweeper.get_initial_state(), NotNull());
   EXPECT_THAT(sweeper.get_end_state(), NotNull());
 
-  EXPECT_THAT(sweeper.get_states(), SizeIs(num_nodes));
+  EXPECT_THAT(sweeper.get_states(), SizeIs(num_nodes + 1));
   EXPECT_THAT(sweeper.get_states(), Each(NotNull()));
   EXPECT_THAT(sweeper.get_states(), Not(MutuallyEqual()));
 
-  EXPECT_THAT(sweeper.get_previous_states(), SizeIs(num_nodes));
+  EXPECT_THAT(sweeper.get_previous_states(), SizeIs(num_nodes + 1));
   EXPECT_THAT(sweeper.get_previous_states(), Each(NotNull()));
   EXPECT_THAT(sweeper.get_previous_states(), Not(MutuallyEqual()));
 
-  EXPECT_THAT(sweeper.get_tau(), SizeIs(num_nodes));
+  EXPECT_THAT(sweeper.get_tau(), SizeIs(num_nodes + 1));
   EXPECT_THAT(sweeper.get_tau(), Each(NotNull()));
   EXPECT_THAT(sweeper.get_tau(), Not(MutuallyEqual()));
 
@@ -102,6 +105,7 @@ class DataAccess
     shared_ptr<NiceMock<QuadratureMock<double>>> quadrature = make_shared<NiceMock<QuadratureMock<double>>>();
 
     shared_ptr<encap_type> encap = make_shared<encap_type>(vector<double>{1.0, 2.0, 3.0});
+    shared_ptr<StatusMock<double>> status = make_shared<StatusMock<double>>();
 
     virtual void SetUp()
     {
@@ -153,6 +157,14 @@ TEST_F(DataAccess, previous_states_after_spreading_initial_state_and_saving)
   }
 }
 
+TEST_F(DataAccess, status_for_modification)
+{
+  ASSERT_THAT(sweeper.get_status(), IsNull());
+
+  sweeper.status() = status;
+  EXPECT_THAT(sweeper.get_status(), Eq(status));
+}
+
 
 class Interface
   : public ::testing::Test
@@ -162,17 +174,13 @@ class Interface
     typedef typename sweeper_type::encap_type                          encap_type;
 
     sweeper_type sweeper;
+    shared_ptr<NiceMock<StatusMock<double>>> status = make_shared<NiceMock<StatusMock<double>>>();
+
+    virtual void SetUp()
+    {
+      sweeper.status() = status;
+    }
 };
-
-TEST_F(Interface, no_implementation_of_predicting)
-{
-  EXPECT_THROW(sweeper.predict(), pfasst::NotImplementedYet);
-}
-
-TEST_F(Interface, no_implementation_of_sweeping)
-{
-  EXPECT_THROW(sweeper.sweep(), pfasst::NotImplementedYet);
-}
 
 TEST_F(Interface, no_implementation_of_advancing)
 {
@@ -210,6 +218,7 @@ class Logic
 
     vector<double> nodes{0.0, 0.5, 1.0};
     shared_ptr<NiceMock<QuadratureMock<double>>> quadrature = make_shared<NiceMock<QuadratureMock<double>>>();
+    shared_ptr<NiceMock<StatusMock<double>>> status = make_shared<NiceMock<StatusMock<double>>>();
 
     shared_ptr<encap_type> encap = make_shared<encap_type>(vector<double>{1.0, 2.0, 3.0});
 
@@ -218,14 +227,16 @@ class Logic
       sweeper.encap_factory()->set_size(3);
       ON_CALL(*(quadrature.get()), get_num_nodes()).WillByDefault(Return(nodes.size()));
       ON_CALL(*(quadrature.get()), get_nodes()).WillByDefault(ReturnRef(nodes));
-      ON_CALL(*(quadrature.get()), right_is_node()).WillByDefault(Return(true));
       sweeper.quadrature() = quadrature;
       sweeper.setup();
+      sweeper.status() = status;
     }
 };
 
-TEST_F(Logic, post_predict_finishes_end_state)
+TEST_F(Logic, post_predict_finishes_end_state_if_right_is_node)
 {
+  ON_CALL(*(quadrature.get()), right_is_node()).WillByDefault(Return(true));
+
   sweeper.initial_state() = encap;
   sweeper.spread();
 
@@ -236,8 +247,23 @@ TEST_F(Logic, post_predict_finishes_end_state)
   EXPECT_THAT(sweeper.get_end_state()->data(), Pointwise(Eq(), encap->data()));
 }
 
-TEST_F(Logic, post_sweep_finishes_end_state)
+TEST_F(Logic, post_predict_fails_if_right_is_not_node)
 {
+  ON_CALL(*(quadrature.get()), right_is_node()).WillByDefault(Return(false));
+
+  sweeper.initial_state() = encap;
+  sweeper.spread();
+
+  EXPECT_THAT(sweeper.get_end_state(), NotNull());
+  EXPECT_THAT(sweeper.get_end_state()->data(), Pointwise(Not(Eq()), encap->data()));
+
+  EXPECT_THROW(sweeper.post_predict(), pfasst::NotImplementedYet);
+}
+
+TEST_F(Logic, post_sweep_finishes_end_state_if_right_is_node)
+{
+  ON_CALL(*(quadrature.get()), right_is_node()).WillByDefault(Return(true));
+
   sweeper.initial_state() = encap;
   sweeper.spread();
 
@@ -246,6 +272,19 @@ TEST_F(Logic, post_sweep_finishes_end_state)
 
   sweeper.post_sweep();
   EXPECT_THAT(sweeper.get_end_state()->data(), Pointwise(Eq(), encap->data()));
+}
+
+TEST_F(Logic, post_sweep_fails_if_right_is_not_node)
+{
+  ON_CALL(*(quadrature.get()), right_is_node()).WillByDefault(Return(false));
+
+  sweeper.initial_state() = encap;
+  sweeper.spread();
+
+  EXPECT_THAT(sweeper.get_end_state(), NotNull());
+  EXPECT_THAT(sweeper.get_end_state()->data(), Pointwise(Not(Eq()), encap->data()));
+
+  EXPECT_THROW(sweeper.post_sweep(), pfasst::NotImplementedYet);
 }
 
 

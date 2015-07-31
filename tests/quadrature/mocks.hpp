@@ -13,4 +13,6 @@ class QuadratureMock
     MOCK_CONST_METHOD0_T(left_is_node, bool());
     MOCK_CONST_METHOD0_T(right_is_node, bool());
     MOCK_CONST_METHOD0_T(expected_error, precision());
+
+    MOCK_CONST_METHOD0_T(get_b_mat, Matrix<double>&());
 };

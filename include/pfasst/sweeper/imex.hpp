@@ -20,7 +20,7 @@ namespace pfasst
       typedef typename sweeper_traits::spacial_type spacial_type;
 
     protected:
-      vector<shared_ptr<encap_type>> _s_integrals;
+      vector<shared_ptr<encap_type>> _q_integrals;
       vector<shared_ptr<encap_type>> _expl_rhs;
       vector<shared_ptr<encap_type>> _impl_rhs;
 

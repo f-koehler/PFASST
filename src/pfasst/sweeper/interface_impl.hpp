@@ -16,7 +16,6 @@ namespace pfasst
   Sweeper<SweeperTrait, Enabled>::Sweeper()
     :   _quadrature(nullptr)
       , _factory(make_shared<typename SweeperTrait::encap_type::factory_type>())
-      , _initial_state(nullptr)
       , _states(0)
       , _previous_states(0)
       , _end_state(nullptr)
@@ -73,14 +72,22 @@ namespace pfasst
   shared_ptr<typename SweeperTrait::encap_type>&
   Sweeper<SweeperTrait, Enabled>::initial_state()
   {
-    return this->_initial_state;
+    if (this->get_states().size() == 0) {
+      CLOG(ERROR, "SWEEPER") << "Sweeper need to be setup first before querying initial state.";
+      throw runtime_error("sweeper not setup before querying initial state");
+    }
+    return this->states().front();
   }
 
   template<class SweeperTrait, typename Enabled>
   const shared_ptr<typename SweeperTrait::encap_type>
   Sweeper<SweeperTrait, Enabled>::get_initial_state() const
   {
-    return this->_initial_state;
+    if (this->get_states().size() == 0) {
+      CLOG(ERROR, "SWEEPER") << "Sweeper need to be setup first before querying initial state.";
+      throw runtime_error("sweeper not setup before querying initial state");
+    }
+    return this->get_states().front();
   }
 
   template<class SweeperTrait, typename Enabled>
@@ -187,23 +194,21 @@ namespace pfasst
     const auto nodes = this->get_quadrature()->get_nodes();
     const auto num_nodes = this->get_quadrature()->get_num_nodes();
 
-    this->initial_state() = this->get_encap_factory()->create();
-
-    this->states().resize(num_nodes);
+    this->states().resize(num_nodes + 1);
     generate(this->states().begin(), this->states().end(),
              bind(&traits::encap_type::factory_type::create, this->get_encap_factory()));
 
-    this->previous_states().resize(num_nodes);
+    this->previous_states().resize(num_nodes + 1);
     generate(this->previous_states().begin(), this->previous_states().end(),
              bind(&traits::encap_type::factory_type::create, this->get_encap_factory()));
 
     this->end_state() = this->get_encap_factory()->create();
 
-    this->tau().resize(num_nodes);
+    this->tau().resize(num_nodes + 1);
     generate(this->tau().begin(), this->tau().end(),
              bind(&traits::encap_type::factory_type::create, this->get_encap_factory()));
 
-    this->residuals().resize(num_nodes);
+    this->residuals().resize(num_nodes + 1);
     generate(this->residuals().begin(), this->residuals().end(),
              bind(&traits::encap_type::factory_type::create, this->get_encap_factory()));
   }
@@ -211,25 +216,18 @@ namespace pfasst
   template<class SweeperTrait, typename Enabled>
   void
   Sweeper<SweeperTrait, Enabled>::pre_predict()
-  {
-    if (this->get_quadrature()->left_is_node()) {
-      assert(this->get_initial_state() != nullptr);
-
-      this->states()[0] = this->get_initial_state();
-    }
-  }
+  {}
 
   template<class SweeperTrait, typename Enabled>
   void
   Sweeper<SweeperTrait, Enabled>::predict()
-  {
-    throw NotImplementedYet("prediction logic for base sweeper");
-  }
+  {}
 
   template<class SweeperTrait, typename Enabled>
   void
   Sweeper<SweeperTrait, Enabled>::post_predict()
   {
+    assert(this->get_status() != nullptr);
     this->integrate_end_state(this->get_status()->get_dt());
   }
 
@@ -241,14 +239,13 @@ namespace pfasst
   template<class SweeperTrait, typename Enabled>
   void
   Sweeper<SweeperTrait, Enabled>::sweep()
-  {
-    throw NotImplementedYet("sweeping logic for base sweeper");
-  }
+  {}
 
   template<class SweeperTrait, typename Enabled>
   void
   Sweeper<SweeperTrait, Enabled>::post_sweep()
   {
+    assert(this->get_status() != nullptr);
     this->integrate_end_state(this->get_status()->get_dt());
   }
 
@@ -265,9 +262,10 @@ namespace pfasst
   {
     assert(this->get_initial_state() != nullptr);
 
-    for_each(this->states().begin(), this->states().end(),
-      [this](shared_ptr<typename traits::encap_type> state)
-      { state->data() = this->get_initial_state()->get_data(); });
+    for(size_t m = 1; m < this->get_states().size(); ++m) {
+      assert(this->states()[m] != nullptr);
+      this->states()[m]->data() = this->get_initial_state()->get_data();
+    }
   }
 
   template<class SweeperTrait, typename Enabled>
@@ -275,10 +273,10 @@ namespace pfasst
   Sweeper<SweeperTrait, Enabled>::save()
   {
     assert(this->get_quadrature() != nullptr);
-    assert(this->get_states().size() == this->get_quadrature()->get_num_nodes());
+    assert(this->get_states().size() == this->get_quadrature()->get_num_nodes() + 1);
     assert(this->get_previous_states().size() == this->get_states().size());
 
-    for (size_t m = 0; m < this->get_quadrature()->get_num_nodes(); ++m) {
+    for (size_t m = 0; m < this->get_states().size(); ++m) {
       this->previous_states()[m]->data() = this->get_states()[m]->get_data();
     }
   }
@@ -307,6 +305,7 @@ namespace pfasst
       this->compute_residuals();
       const size_t num_residuals = this->get_residuals().size();
       vector<typename traits::spacial_type> abs_norms(num_residuals), rel_norms(num_residuals);
+
       transform(this->get_residuals().cbegin(), this->get_residuals().cend(),
                 abs_norms.begin(),
                 [](const shared_ptr<typename traits::encap_type>& residual)
@@ -316,6 +315,7 @@ namespace pfasst
                 [](const shared_ptr<typename traits::encap_type>& residual,
                    const typename traits::spacial_type& absnorm)
                 { return absnorm / residual->norm0(); });
+
       return (   *(max_element(abs_norms.cbegin(), abs_norms.cend())) < this->_abs_residual_tol
               || *(max_element(rel_norms.cbegin(), rel_norms.cend())) < this->_rel_residual_tol);
     }
@@ -335,7 +335,7 @@ namespace pfasst
 
       this->end_state()->data() = this->get_states().back()->get_data();
     } else {
-      throw NotImplementedYet("integration of end state for quadrature not including right time point");
+      throw NotImplementedYet("integration of end state for quadrature not including right time interval boundary");
     }
   }
 
