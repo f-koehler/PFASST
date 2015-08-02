@@ -8,6 +8,7 @@ include_directories(
 
 set(TESTS
     test_controller
+    test_sdc
     test_status
 )
 

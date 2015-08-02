@@ -3,11 +3,6 @@
 #include <cmath>
 using namespace std;
 
-#include <leathers/push>
-#include <leathers/all>
-#include <boost/any.hpp>
-#include <leathers/pop>
-
 #include "pfasst/util.hpp"
 #include "pfasst/config.hpp"
 #include "pfasst/logging.hpp"
@@ -149,6 +144,13 @@ namespace pfasst
   }
 
   template<class TransferT>
+  const shared_ptr<typename TransferT::traits::coarse_sweeper_type>
+  Controller<TransferT>::get_coarse() const
+  {
+    return this->_coarse_level;
+  }
+
+  template<class TransferT>
   shared_ptr<typename TransferT::traits::coarse_sweeper_type>
   Controller<TransferT>::get_coarse()
   {
@@ -156,10 +158,24 @@ namespace pfasst
   }
 
   template<class TransferT>
+  const shared_ptr<typename TransferT::traits::fine_sweeper_type>
+  Controller<TransferT>::get_fine() const
+  {
+    return this->_fine_level;
+  }
+
+  template<class TransferT>
   shared_ptr<typename TransferT::traits::fine_sweeper_type>
   Controller<TransferT>::get_fine()
   {
     return this->_fine_level;
+  }
+
+  template<class TransferT>
+  const shared_ptr<TransferT>
+  Controller<TransferT>::get_transfer() const
+  {
+    return this->_transfer;
   }
 
   template<class TransferT>
@@ -179,6 +195,12 @@ namespace pfasst
     if (this->get_num_levels() == 0) {
       CLOG(ERROR, "CONTROL") << "At least one level (Sweeper) must have been added.";
       throw logic_error("no levels defined");
+    }
+
+    if (this->get_status()->get_t_end() <= 0.0) {
+      CLOG(ERROR, "CONTROL") << "End time point must be larger than zero."
+        << " (" << this->get_status()->get_t_end() << ")";
+      throw logic_error("end time point must be larger zero");
     }
 
     const auto num_steps = this->get_num_steps();

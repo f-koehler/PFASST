@@ -1,10 +1,7 @@
 #ifndef _PFASST__CONTROLLER__INTERFACE_HPP_
 #define _PFASST__CONTROLLER__INTERFACE_HPP_
 
-#include <deque>
-#include <iterator>
 #include <memory>
-#include <type_traits>
 using namespace std;
 
 #include "pfasst/globals.hpp"
@@ -56,12 +53,16 @@ namespace pfasst
 
       template<class SweeperT>
       void add_sweeper(shared_ptr<SweeperT> sweeper, const bool as_coarse);
-      void add_transfer(shared_ptr<TransferT> transfer);
 
-      shared_ptr<typename TransferT::traits::coarse_sweeper_type> get_coarse();
-      shared_ptr<typename TransferT::traits::fine_sweeper_type> get_fine();
+      virtual void add_transfer(shared_ptr<TransferT> transfer);
 
-      shared_ptr<TransferT> get_transfer();
+      virtual const shared_ptr<typename TransferT::traits::coarse_sweeper_type> get_coarse() const;
+      virtual       shared_ptr<typename TransferT::traits::coarse_sweeper_type> get_coarse();
+      virtual const shared_ptr<typename TransferT::traits::fine_sweeper_type> get_fine() const;
+      virtual       shared_ptr<typename TransferT::traits::fine_sweeper_type> get_fine();
+
+      virtual const shared_ptr<TransferT> get_transfer() const;
+      virtual       shared_ptr<TransferT> get_transfer();
 
       virtual void set_options();
 
