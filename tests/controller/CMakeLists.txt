@@ -10,6 +10,7 @@ set(TESTS
     test_controller
     test_sdc
     test_status
+    test_two_level_pfasst
 )
 
 foreach(test ${TESTS})
