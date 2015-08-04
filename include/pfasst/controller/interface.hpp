@@ -46,6 +46,7 @@ namespace pfasst
       template<class SweeperT>
       void add_sweeper(shared_ptr<SweeperT> sweeper, const bool as_coarse);
 
+      // XXX: might not be in interface
       virtual void add_transfer(shared_ptr<TransferT> transfer);
 
       virtual const shared_ptr<TransferT> get_transfer() const;

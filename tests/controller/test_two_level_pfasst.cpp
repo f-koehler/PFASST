@@ -14,11 +14,12 @@ using pfasst::TwoLevelPfasst;
 #include "sweeper/mocks.hpp"
 #include "transfer/mocks.hpp"
 
-typedef pfasst::vector_encap_traits<double, double>           VectorEncapTrait;
-typedef pfasst::encap::Encapsulation<VectorEncapTrait>        VectorEncapsulation;
-typedef SweeperMock<pfasst::sweeper_traits<VectorEncapTrait>> SweeperType;
-typedef pfasst::transfer_traits<SweeperType, SweeperType, 2>  TransferTraits;
-typedef TransferMock<TransferTraits>                          TransferType;
+typedef pfasst::vector_encap_traits<double, double>                     VectorEncapTrait;
+typedef pfasst::encap::Encapsulation<VectorEncapTrait>                  VectorEncapsulation;
+typedef NiceMock<SweeperMock<pfasst::sweeper_traits<VectorEncapTrait>>> SweeperType;
+typedef pfasst::transfer_traits<SweeperType, SweeperType, 2>            TransferTraits;
+typedef NiceMock<TransferMock<TransferTraits>>                          TransferType;
+typedef CommMock                                              CommunicatorType;
 
 
 typedef ::testing::Types<TwoLevelPfasst<TransferType>> ControllerTypes;
@@ -32,13 +33,13 @@ class Interface
     shared_ptr<TwoLevelPfasst<TransferType>> controller;
 
     shared_ptr<pfasst::Status<double>> status;
-    shared_ptr<CommMock> comm;
+    shared_ptr<CommunicatorType> comm;
 
     virtual void SetUp()
     {
       this->controller = make_shared<TwoLevelPfasst<TransferType>>();
       this->status = make_shared<pfasst::Status<double>>();
-      this->comm = make_shared<CommMock>();
+      this->comm = make_shared<CommunicatorType>();
     }
 };
 
@@ -95,18 +96,54 @@ class Setup
     shared_ptr<TwoLevelPfasst<TransferType>> controller;
 
     shared_ptr<pfasst::Status<double>> status;
-    shared_ptr<CommMock> comm;
+    shared_ptr<CommunicatorType> comm;
     shared_ptr<SweeperType> sweeper1;
     shared_ptr<SweeperType> sweeper2;
     shared_ptr<TransferType> transfer;
+    shared_ptr<VectorEncapsulation> sweeper1_initial;
+    shared_ptr<VectorEncapsulation> sweeper1_end;
+    shared_ptr<VectorEncapsulation> sweeper2_initial;
+    shared_ptr<VectorEncapsulation> sweeper2_end;
 
     virtual void SetUp()
     {
       this->controller = make_shared<TwoLevelPfasst<TransferType>>();
+      this->transfer = make_shared<TransferType>();
       this->status = make_shared<pfasst::Status<double>>();
-      this->comm = make_shared<CommMock>();
+
+      this->comm = make_shared<CommunicatorType>();
+      ON_CALL(*(this->comm.get()), get_size())
+        .WillByDefault(Return(2));
+      ON_CALL(*(this->comm.get()), get_rank())
+        .WillByDefault(Return(0));
+      ON_CALL(*(this->comm.get()), get_root())
+        .WillByDefault(Return(0));
+      ON_CALL(*(this->comm.get()), is_first())
+        .WillByDefault(Return(true));
+      ON_CALL(*(this->comm.get()), is_last())
+        .WillByDefault(Return(false));
+
       this->sweeper1 = make_shared<SweeperType>();
       this->sweeper2 = make_shared<SweeperType>();
+
+      this->sweeper1_initial = this->sweeper1->get_encap_factory()->create();
+      this->sweeper1_end = this->sweeper1->get_encap_factory()->create();
+      this->sweeper2_initial = this->sweeper2->get_encap_factory()->create();
+      this->sweeper2_end = this->sweeper2->get_encap_factory()->create();
+
+      ON_CALL(*(this->sweeper1.get()), get_initial_state())
+        .WillByDefault(Return(this->sweeper1_initial));
+      ON_CALL(*(this->sweeper1.get()), initial_state())
+        .WillByDefault(ReturnRef(this->sweeper1_initial));
+      ON_CALL(*(this->sweeper1.get()), get_end_state())
+        .WillByDefault(Return(this->sweeper1_end));
+
+      ON_CALL(*(this->sweeper2.get()), get_initial_state())
+        .WillByDefault(Return(this->sweeper2_initial));
+      ON_CALL(*(this->sweeper2.get()), initial_state())
+        .WillByDefault(ReturnRef(this->sweeper2_initial));
+      ON_CALL(*(this->sweeper2.get()), get_end_state())
+        .WillByDefault(Return(this->sweeper2_end));
     }
 };
 
@@ -137,6 +174,8 @@ TEST_F(Setup, exactly_two_levels_must_be_added)
   controller->status()->t_end() = 4.2;
   controller->status()->dt() = 0.1;
   controller->status()->max_iterations() = 1;
+  controller->communicator() = comm;
+  controller->add_transfer(transfer);
 
   EXPECT_THROW(controller->setup(), logic_error);
 
@@ -154,6 +193,8 @@ TEST_F(Setup, setup_required_for_running)
   controller->status()->max_iterations() = 1;
   controller->add_sweeper(sweeper1, true);
   controller->add_sweeper(sweeper1, false);
+  controller->communicator() = comm;
+  controller->add_transfer(transfer);
 
   ASSERT_FALSE(controller->is_ready());
   EXPECT_THROW(controller->run(), logic_error);
@@ -171,17 +212,21 @@ class Logic
     shared_ptr<TwoLevelPfasst<TransferType>> controller;
 
     shared_ptr<pfasst::Status<double>> status;
-    shared_ptr<CommMock> comm;
+    shared_ptr<CommunicatorType> comm;
     shared_ptr<SweeperType> sweeper1;
     shared_ptr<SweeperType> sweeper2;
+    shared_ptr<TransferType> transfer;
 
     virtual void SetUp()
     {
       this->controller = make_shared<TwoLevelPfasst<TransferType>>();
+      this->transfer = make_shared<TransferType>();
       this->status = make_shared<pfasst::Status<double>>();
-      this->comm = make_shared<CommMock>();
+      this->comm = make_shared<CommunicatorType>();
       this->sweeper1 = make_shared<SweeperType>();
       this->sweeper2 = make_shared<SweeperType>();
+      this->controller->communicator() = this->comm;
+      this->controller->add_transfer(this->transfer);
     }
 };
 

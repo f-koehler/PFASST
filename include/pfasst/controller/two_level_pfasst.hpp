@@ -26,6 +26,18 @@ namespace pfasst
 
       shared_ptr<comm::Communicator> _comm;
 
+      virtual void predict_coarse();
+      virtual void predict_fine();
+      virtual void sweep_coarse();
+      virtual void sweep_fine();
+
+      virtual void predictor();
+      virtual void cycle_down();
+      virtual void cycle_up();
+      virtual void broadcast();
+
+      virtual int compute_tag() const;
+
     public:
       TwoLevelPfasst();
       TwoLevelPfasst(const TwoLevelPfasst<TransferT>& other) = default;
