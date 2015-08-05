@@ -20,6 +20,8 @@ typedef pfasst::transfer_traits<SweeperType, SweeperType, 1>            Transfer
 typedef TransferMock<TransferTraits>                                    TransferType;
 typedef NiceMock<QuadratureMock<double>>                                QuadType;
 
+#include "controller/mocks.hpp"
+
 
 typedef ::testing::Types<SDC<TransferType>> SDCTypes;
 INSTANTIATE_TYPED_TEST_CASE_P(SDC, Concepts, SDCTypes);
@@ -36,7 +38,7 @@ class Interface
     virtual void SetUp()
     {
       this->controller = make_shared<SDC<TransferType>>();
-      this->status = make_shared<pfasst::Status<double>>();
+      this->status = make_shared<pfasst::Status<double>();
     }
 };
 
