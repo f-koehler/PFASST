@@ -38,7 +38,7 @@ class Interface
     virtual void SetUp()
     {
       this->controller = make_shared<SDC<TransferType>>();
-      this->status = make_shared<pfasst::Status<double>();
+      this->status = make_shared<pfasst::Status<double>>();
     }
 };
 
@@ -90,6 +90,7 @@ class Setup
     shared_ptr<SweeperType> sweeper;
     shared_ptr<TransferType> transfer;
     shared_ptr<QuadType> quad;
+    shared_ptr<VectorEncapsulation> encap = make_shared<VectorEncapsulation>(vector<double>{0.0, 0.0});
 
     virtual void SetUp()
     {
@@ -106,6 +107,7 @@ class Setup
       ON_CALL(*(this->sweeper.get()), get_quadrature()).WillByDefault(Return(this->quad));
       ON_CALL(*(this->sweeper.get()), status()).WillByDefault(ReturnRef(this->status));
       ON_CALL(*(this->sweeper.get()), get_status()).WillByDefault(Return(this->status));
+      ON_CALL(*(this->sweeper.get()), get_initial_state()).WillByDefault(Return(this->encap));
     }
 };
 
@@ -143,7 +145,6 @@ TEST_F(Setup, setup_required_for_running)
   ASSERT_FALSE(controller->is_ready());
   EXPECT_THROW(controller->run(), logic_error);
 
-  EXPECT_CALL(*(sweeper.get()), status()).Times(1);
   EXPECT_CALL(*(sweeper.get()), setup()).Times(1);
   controller->setup();
 
@@ -162,6 +163,7 @@ class Logic
     shared_ptr<pfasst::Status<double>> status;
     shared_ptr<SweeperType> sweeper;
     shared_ptr<QuadType> quad;
+    shared_ptr<VectorEncapsulation> encap = make_shared<VectorEncapsulation>(vector<double>{0.0, 0.0});
 
     virtual void SetUp()
     {
@@ -177,6 +179,7 @@ class Logic
       ON_CALL(*(this->sweeper.get()), get_quadrature()).WillByDefault(Return(this->quad));
       ON_CALL(*(this->sweeper.get()), status()).WillByDefault(ReturnRef(this->status));
       ON_CALL(*(this->sweeper.get()), get_status()).WillByDefault(Return(this->status));
+      ON_CALL(*(this->sweeper.get()), get_initial_state()).WillByDefault(Return(this->encap));
 
       this->controller->add_sweeper(this->sweeper);
     }
@@ -280,6 +283,7 @@ TEST_F(Logic, single_time_step_sdc)
   EXPECT_CALL(*(sweeper.get()), post_sweep()).Times(3);
 
   EXPECT_CALL(*(sweeper.get()), advance()).Times(0);
+  EXPECT_CALL(*(sweeper.get()), post_step()).Times(1);
 
   controller->run();
   EXPECT_THAT(controller->status()->get_step(), Eq(0));
