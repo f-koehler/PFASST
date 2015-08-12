@@ -25,7 +25,7 @@ if(BOOST_ROOT)
     set(Boost_NO_SYSTEM_PATHS ON)
 endif()
 
-set(Boost_MIN_VERSION 1.53.0)
+set(Boost_MIN_VERSION 1.55.0)
 set(Boost_COMPONETS program_options)
 
 find_package(Boost ${Boost_MINOR_VERSION} COMPONENTS ${Boost_COMPONETS} REQUIRED)
