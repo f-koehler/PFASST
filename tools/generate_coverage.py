@@ -20,6 +20,7 @@ assert(version_info[0] >= 3 and version_info[1] >= 3)
 import argparse
 import os
 import os.path
+from os.path import join
 import shutil
 import subprocess as sp
 import re
@@ -96,8 +97,8 @@ def get_project_root():
     curr_dir = os.path.abspath(os.path.curdir)
     logging.debug("Trying current path: %s" % curr_dir)
 
-    include_access = os.access(os.path.join(curr_dir, "include"), os.R_OK)
-    examples_access = os.access(os.path.join(curr_dir, "examples"), os.R_OK)
+    include_access = os.access(join(curr_dir, "include"), os.R_OK)
+    examples_access = os.access(join(curr_dir, "examples"), os.R_OK)
     if include_access and examples_access:
         logging.debug("Project root is: %s" % curr_dir)
         options.base_dir = curr_dir
@@ -138,7 +139,7 @@ def setup_and_init_options():
         raise ValueError(error)
     options.build_dir = os.path.abspath(_args.build_dir)
 
-    cache_path = os.path.join(options.build_dir, "CMakeCache.txt")
+    cache_path = join(options.build_dir, "CMakeCache.txt")
     if os.access(cache_path, os.W_OK):
         with_gcc_prof = False
         with_mpi = False
@@ -176,7 +177,7 @@ def get_test_directories():
     """
     logging.info("Looking for tests ...")
 
-    test_dir = os.path.join(options.build_dir, 'tests')
+    test_dir = join(options.build_dir, 'tests')
     regex_test = re.compile('^.*\/(?P<test_name>test_[a-zA-Z\-_]+)\.dir$')
     regex_example = re.compile('^.*/tests/examples/.*$')
 
@@ -213,14 +214,15 @@ def get_test_directories():
 def run_test(path, name, is_example):
     logging.info("- %s" % name)
     logging.debug("Found in %s" % path)
-    output_file = open('%s/%s.log' % (options.coverage_dir, name), mode='a')
+    output_file = open(join(options.coverage_dir, name) + ".log", mode='a')
     logging.debug("Output log: %s" % output_file.name)
 
     def _print(s):
         print(s, file=output_file, flush=True)
 
     def _call(cmd):
-        return sp.check_call(cmd, shell=True, stdout=output_file, stderr=output_file)
+        return sp.check_call(cmd, shell=True,
+                             stdout=output_file, stderr=output_file)
 
     os.chdir(os.path.abspath(path))
     logging.debug("Deleting old tracing data ...")
@@ -308,13 +310,12 @@ def generate_html():
     logging.info("Generating HTML report ...")
     output_path = '%s/generate_html.log' % (options.coverage_dir)
     output_file = open(output_path, mode='a')
-    # cmd = (
-    #     'genhtml --output-directory %s --demangle-cpp --num-spaces 2 --sort '
-    #     '--title "PFASST++ Test Coverage" --prefix "%s" --function-coverage '
-    #     '--legend'
-    # ) % (options.coverage_dir, options.base_dir, options.final_tracefile)
-    sp.check_call('genhtml --output-directory %s --demangle-cpp --num-spaces 2 --sort --title "PFASST++ Test Coverage" --prefix "%s" --function-coverage --legend "%s"' % (options.coverage_dir, options.base_dir, options.final_tracefile), shell=True, stdout=output_file, stderr=output_file)
-    # sp.check_call(cmd, shell=True, stdout=output_file, stderr=output_file)
+    cmd = (
+        'genhtml --output-directory %s --demangle-cpp --num-spaces 2 --sort '
+        '--title "PFASST++ Test Coverage" --prefix "%s" --function-coverage '
+        '--legend %s'
+    ).format(options.coverage_dir, options.base_dir, options.final_tracefile)
+    sp.check_call(cmd, shell=True, stdout=output_file, stderr=output_file)
     output_file.close()
     logging.info("Coverage report can be found in: file://%s/index.html" % options.coverage_dir)
 
