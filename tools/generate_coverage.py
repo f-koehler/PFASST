@@ -250,24 +250,23 @@ def run_test(path, name, is_example):
         logging.warning(e)
     _print('### done.')
 
-    # logging.debug("Extracting interesting tracing data ...")
-    # _print('### extracting interesting tracing data ...')
-    # try:
-    #     _call('lcov --extract "%s.info.prelim" "*%s/include/pfasst/**/*" --output-file %s.info' % (name, options.base_dir, name))
-    #     options.tracefiles.append("%s/%s.info" % (os.path.abspath(path), name))
-    # except sp.CalledProcessError as e:
-    #     logging.warning(e)
+    logging.debug("Extracting interesting tracing data ...")
+    _print('### extracting interesting tracing data ...')
+    try:
+        glob = join(options.base_dir, "src", "pfasst", "**", "*")
+        _call('lcov --extract "%s.info.prelim" "%s" --output-file %s.info' % (name, glob, name))
+        options.tracefiles.append("%s/%s.info" % (os.path.abspath(path), name))
+    except sp.CalledProcessError as e:
+        logging.warning(e)
 
-    # if is_example:
-    #     logging.debug("This test belongs to an example, thus also covering examples code")
-    #     try:
-    #         _call('lcov --extract "%s.info.prelim" "*%s/examples/pfasst/**/*" --output-file %s.info.example' % (name, options.base_dir, name))
-    #         options.tracefiles.append("%s/%s.info.example" % (os.path.abspath(path), name))
-    #     except sp.CalledProcessError as e:
-    #         logging.warning(e)
-    shutil.copy2(name+".info.prelim", name+".info")
-    options.tracefiles.append(os.path.abspath(path)+"/"+name+".info")
-    _print('### done.')
+    if is_example:
+        logging.debug("This test belongs to an example, thus also covering examples code")
+        try:
+            glob = join(options.base_dir, "examples", "**", "*")
+            _call('lcov --extract "%s.info.prelim" "%s" --output-file %s.info.example' % (name, glob, name))
+            options.tracefiles.append("%s/%s.info.example" % (os.path.abspath(path), name))
+        except sp.CalledProcessError as e:
+            logging.warning(e)
 
     os.chdir(options.base_dir)
     output_file.close()
@@ -293,6 +292,9 @@ def aggregate_tracefiles():
     options.final_tracefile = "%s/all_tests.info" % options.coverage_dir
     for tracefile in options.tracefiles:
         logging.debug("- %s" % (tracefile))
+        # skip empty tracefiles
+        if not os.path.getsize(tracefile):
+            continue
         print("### adding tracefile: %s" % (tracefile,), file=output_file, flush=True)
         if os.access(options.final_tracefile, os.W_OK):
             sp.check_call('lcov --add-tracefile "%s" --add-tracefile "%s" --output-file "%s"'
@@ -311,9 +313,9 @@ def generate_html():
     output_path = '%s/generate_html.log' % (options.coverage_dir)
     output_file = open(output_path, mode='a')
     cmd = (
-        'genhtml --output-directory %s --demangle-cpp --num-spaces 2 --sort '
-        '--title "PFASST++ Test Coverage" --prefix "%s" --function-coverage '
-        '--legend %s'
+        'genhtml --output-directory {} --demangle-cpp --num-spaces 2 --sort '
+        '--title "PFASST++ Test Coverage" --prefix "{}" --function-coverage '
+        '--legend {}'
     ).format(options.coverage_dir, options.base_dir, options.final_tracefile)
     sp.check_call(cmd, shell=True, stdout=output_file, stderr=output_file)
     output_file.close()
