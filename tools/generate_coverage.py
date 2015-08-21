@@ -45,7 +45,7 @@ dictConfig(
         },
         'root': {
             'handlers': ['console'],
-            'level': 'INFO'
+            'level': 'DEBUG'
         }
     }
 )
@@ -248,21 +248,23 @@ def run_test(path, name, is_example):
         logging.warning(e)
     _print('### done.')
 
-    logging.debug("Extracting interesting tracing data ...")
-    _print('### extracting interesting tracing data ...')
-    try:
-        _call('lcov --extract "%s.info.prelim" "*%s/include/**/*" --output-file %s.info' % (name, options.base_dir, name))
-        options.tracefiles.append("%s/%s.info" % (os.path.abspath(path), name))
-    except sp.CalledProcessError as e:
-        logging.warning(e)
+    # logging.debug("Extracting interesting tracing data ...")
+    # _print('### extracting interesting tracing data ...')
+    # try:
+    #     _call('lcov --extract "%s.info.prelim" "*%s/include/pfasst/**/*" --output-file %s.info' % (name, options.base_dir, name))
+    #     options.tracefiles.append("%s/%s.info" % (os.path.abspath(path), name))
+    # except sp.CalledProcessError as e:
+    #     logging.warning(e)
 
-    if is_example:
-        logging.debug("This test belongs to an example, thus also covering examples code")
-        try:
-            _call('lcov --extract "%s.info.prelim" "*%s/examples/**/*" --output-file %s.info.example' % (name, options.base_dir, name))
-            options.tracefiles.append("%s/%s.info.example" % (os.path.abspath(path), name))
-        except sp.CalledProcessError as e:
-            logging.warning(e)
+    # if is_example:
+    #     logging.debug("This test belongs to an example, thus also covering examples code")
+    #     try:
+    #         _call('lcov --extract "%s.info.prelim" "*%s/examples/pfasst/**/*" --output-file %s.info.example' % (name, options.base_dir, name))
+    #         options.tracefiles.append("%s/%s.info.example" % (os.path.abspath(path), name))
+    #     except sp.CalledProcessError as e:
+    #         logging.warning(e)
+    shutil.copy2(name+".info.prelim", name+".info")
+    options.tracefiles.append(os.path.abspath(path)+"/"+name+".info")
     _print('### done.')
 
     os.chdir(options.base_dir)
@@ -306,12 +308,13 @@ def generate_html():
     logging.info("Generating HTML report ...")
     output_path = '%s/generate_html.log' % (options.coverage_dir)
     output_file = open(output_path, mode='a')
-    cmd = (
-        'genhtml --output-directory %s --demangle-cpp --num-spaces 2 --sort '
-        '--title "PFASST++ Test Coverage" --prefix "%s" --function-coverage '
-        '--legend'
-    ) % (options.coverage_dir, options.base_dir, options.final_tracefile)
-    sp.check_call(cmd, shell=True, stdout=output_file, stderr=output_file)
+    # cmd = (
+    #     'genhtml --output-directory %s --demangle-cpp --num-spaces 2 --sort '
+    #     '--title "PFASST++ Test Coverage" --prefix "%s" --function-coverage '
+    #     '--legend'
+    # ) % (options.coverage_dir, options.base_dir, options.final_tracefile)
+    sp.check_call('genhtml --output-directory %s --demangle-cpp --num-spaces 2 --sort --title "PFASST++ Test Coverage" --prefix "%s" --function-coverage --legend "%s"' % (options.coverage_dir, options.base_dir, options.final_tracefile), shell=True, stdout=output_file, stderr=output_file)
+    # sp.check_call(cmd, shell=True, stdout=output_file, stderr=output_file)
     output_file.close()
     logging.info("Coverage report can be found in: file://%s/index.html" % options.coverage_dir)
 
