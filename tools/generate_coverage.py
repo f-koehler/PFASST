@@ -178,16 +178,16 @@ def get_test_directories():
     logging.info("Looking for tests ...")
 
     test_dir = join(options.build_dir, 'tests')
-    regex_test = re.compile('^.*\/(?P<test_name>test_[a-zA-Z\-_]+)\.dir$')
-    regex_example = re.compile('^.*/tests/examples/.*$')
+    regex_name = re.compile('^.*\/(?P<test_name>test_[a-zA-Z\d\-_]+)\.dir$')
+    regex_example = re.compile('^.*\/tests\/examples\/.*$')
 
     for root, dirs, files in os.walk(test_dir):
-        match_name = regex_test.search(root)
+        match_name = regex_name.search(root)
         match_is_example = regex_example.search(root)
         is_example = match_is_example is not None
         if match_name is not None:
             testname = match_name.groupdict()['test_name']
-            if is_example:
+            if  is_example:
                 test_case = {
                     'path': root,
                     'name': testname,
