@@ -28,6 +28,9 @@ option(pfasst_WITH_GCC_PROF     "Enable excessive debugging & profiling output w
 cmake_dependent_option(
        enable_LTO               "enable LinkTimeOptimization"                             OFF
            "CMAKE_BUILD_TYPE" Release)
+cmake_dependent_option(
+       pfasst_WITH_SCOREP       "enable scalable instrumentation with Score-P"            OFF
+           "pfasst_WITH_MPI" ON)
 
 set(3rdparty_INCLUDES)
 set(3rdparty_DEPENDEND_LIBS)
@@ -62,11 +65,11 @@ if(${pfasst_WITH_MPI})
     message(STATUS "Using MPI C++ Compiler Wrapper: ${MPI_CXX_COMPILER}")
     add_definitions(-DWITH_MPI)
 
-    if(${pfasst_WITH_MPIP})
-        message(STATUS "")
-        message(STATUS "Trying to find and link against mpiP")
-        find_package(MPIP REQUIRED)
-        list(APPEND pfasst_DEPENDEND_LIBS ${MPIP_LIBRARIES})
+    if(pfasst_WITH_SCOREP)
+        get_filename_component(CMAKE_CXX_COMPILER ${MPI_CXX_COMPILER} NAME)
+        get_filename_component(CMAKE_C_COMPILER ${MPI_C_COMPILER} NAME)
+        set(CMAKE_CXX_COMPILER "scorep ${CMAKE_CXX_COMPILER}")
+        set(CMAKE_C_COMPILER "scorep ${CMAKE_C_COMPILER}")
     endif()
 endif()
 
