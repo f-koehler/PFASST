@@ -51,6 +51,8 @@ namespace pfasst
           vector<complex<spacial_type>>      _ddx;
           vector<complex<spacial_type>>      _lap;
 
+          ofstream _out_file;
+
         protected:
           virtual shared_ptr<typename SweeperTrait::encap_type> evaluate_rhs_expl(const typename SweeperTrait::time_type& t,
                                                                                   const shared_ptr<typename SweeperTrait::encap_type> u) override;
@@ -71,7 +73,7 @@ namespace pfasst
                              const typename SweeperTrait::spacial_type& v = DEFAULT_VELOCITY<SweeperTrait>);
           AdvecDiff(const AdvecDiff<SweeperTrait, Enabled>& other) = default;
           AdvecDiff(AdvecDiff<SweeperTrait, Enabled>&& other) = default;
-          virtual ~AdvecDiff() = default;
+          virtual ~AdvecDiff();
           AdvecDiff<SweeperTrait, Enabled>& operator=(const AdvecDiff<SweeperTrait, Enabled>& other) = default;
           AdvecDiff<SweeperTrait, Enabled>& operator=(AdvecDiff<SweeperTrait, Enabled>&& other) = default;
 

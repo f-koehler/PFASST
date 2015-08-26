@@ -2,6 +2,7 @@
 
 #include <cmath>
 #include <complex>
+#include <fstream>
 using namespace std;
 
 #include <leathers/push>
@@ -32,6 +33,7 @@ namespace pfasst
         config::options::add_option<size_t>("Advection-Diffusion", "coarse_factor", "coarsening factor");
         config::options::add_option<spacial_type>("Advection-Diffusion", "nu", "diffusivity");
         config::options::add_option<spacial_type>("Advection-Diffusion", "vel", "velocity of advection");
+        config::options::add_option<string>("Advection-Diffusion", "out_file", "write errors/residuals to this file");
       }
 
       template<class SweeperTrait, typename Enabled>
@@ -55,6 +57,15 @@ namespace pfasst
       }
 
       template<class SweeperTrait, typename Enabled>
+      AdvecDiff<SweeperTrait, Enabled>::~AdvecDiff()
+      {
+          if(this->_out_file.is_open()) {
+              this->_out_file.flush();
+              this->_out_file.close();
+          }
+      }
+
+      template<class SweeperTrait, typename Enabled>
       void
       AdvecDiff<SweeperTrait, Enabled>::set_options()
       {
@@ -62,6 +73,15 @@ namespace pfasst
 
         this->_nu = config::get_value<typename traits::spacial_type>("nu", DEFAULT_DIFFUSIVITY<SweeperTrait>);
         this->_v = config::get_value<typename traits::spacial_type>("vel", DEFAULT_VELOCITY<SweeperTrait>);
+
+        if(this->_out_file.is_open()) {
+          this->_out_file.flush();
+          this->_out_file.close();
+        }
+        std::string file_name = config::get_value<string>("out_file", "residuals");
+        if(string(this->get_logger_id()) == "LVL_COARSE")
+            file_name += "_coarse";
+        this->_out_file.open(file_name.c_str(), ios_base::out | ios_base::trunc);
       }
 
       template<class SweeperTrait, typename Enabled>
@@ -136,6 +156,11 @@ namespace pfasst
                                           << "      |abs error| = " << LOG_FLOAT << encap::norm0(error[num_nodes])
                                           << "      |rel error| = " << LOG_FLOAT << encap::norm0(rel_error[num_nodes]);
 
+        this->_out_file << (t+dt*nodes[num_nodes]) << "\t"
+            << this->_abs_res_norms[num_nodes] << "\t"
+            << this->_rel_res_norms[num_nodes] << "\t"
+            << encap::norm0(error[num_nodes]) << "\t"
+            << encap::norm0(rel_error[num_nodes]) << endl;
         return converged;
       }
 
