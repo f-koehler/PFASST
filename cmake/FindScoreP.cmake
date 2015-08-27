@@ -14,6 +14,7 @@ else()
     set(SCOREP_FOUND "NO")
 endif()
 
+include(FindPackageHandleStandardArgs)
 find_package_handle_standard_args(SCOREP FOUND_VAR SCOREP_FOUND REQUIRED_VARS SCOREP_EXECUTABLE)
 
 mark_as_advanced(SCOREP_EXECUTABLE)
