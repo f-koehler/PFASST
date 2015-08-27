@@ -1,8 +1,6 @@
 cmake_minimum_required(VERSION 2.8.6)
 project(pfasst)
 
-set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
-
 list(APPEND CMAKE_MODULE_PATH ${pfasst_SOURCE_DIR}/cmake)
 include(cmake/utility_functions.cmake)
 include(CheckCXXCompilerFlag)
@@ -26,7 +24,9 @@ cmake_dependent_option(
 option(pfasst_BUILD_TESTS       "Build test suite for PFASST."                            ON )
 
 option(pfasst_WITH_MPI          "Build with MPI enabled."                                 ON )
-option(pfasst_WITH_SCOREP       "enable scalable instrumentation with Score-P"           OFF )
+cmake_dependent_option(
+        pfasst_WITH_SCOREP       "enable scalable instrumentation with Score-P"           OFF
+            "pfasst_WITH_MPI" ON)
 
 option(pfasst_WITH_GCC_PROF     "Enable excessive debugging & profiling output with GCC." OFF)
 cmake_dependent_option(
@@ -53,20 +53,20 @@ if(${pfasst_WITH_MPI})
     message(STATUS "Using MPI C++ Compiler Wrapper: ${MPI_CXX_COMPILER}")
     message(STATUS "USing MPI C Compiler Wrapper: ${MPI_C_COMPILER}")
     add_definitions(-DWITH_MPI)
-endif()
 
-if(pfasst_WITH_SCOREP)
-    find_package(ScoreP REQUIRED)
-    configure_file(
-        "${pfasst_SOURCE_DIR}/cmake/scorep-cxx.sh.in"
-        "${CMAKE_BINARY_DIR}/scorep-cxx.sh"
-    )
-    configure_file(
-        "${pfasst_SOURCE_DIR}/cmake/scorep-cc.sh.in"
-        "${CMAKE_BINARY_DIR}/scorep-cc.sh"
-    )
-    set(CMAKE_CXX_COMPILER "${CMAKE_BINARY_DIR}/scorep-cxx.sh")
-    set(CMAKE_C_COMPILER "${CMAKE_BINARY_DIR}/scorep-cc.sh")
+    if(pfasst_WITH_SCOREP)
+        find_package(ScoreP REQUIRED)
+        configure_file(
+            "${pfasst_SOURCE_DIR}/cmake/scorep-cxx.sh.in"
+            "${CMAKE_BINARY_DIR}/scorep-cxx.sh"
+        )
+        configure_file(
+            "${pfasst_SOURCE_DIR}/cmake/scorep-cc.sh.in"
+            "${CMAKE_BINARY_DIR}/scorep-cc.sh"
+        )
+        set(CMAKE_CXX_COMPILER "${CMAKE_BINARY_DIR}/scorep-cxx.sh")
+        set(CMAKE_C_COMPILER "${CMAKE_BINARY_DIR}/scorep-cc.sh")
+    endif()
 endif()
 
 # Check for C++11 support
