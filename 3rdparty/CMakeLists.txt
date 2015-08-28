@@ -60,8 +60,8 @@ set_package_properties(Eigen3
 )
 
 if(NOT EIGEN3_FOUND)
-    set(EIGEN3_SOURCE_URL "http://bitbucket.org/eigen/eigen/get/3.2.2.tar.bz2")
-    set(EIGEN3_SOURCE_MD5 "fc2e814ae449d16b331f7e1f4e272bd3")
+    set(EIGEN3_SOURCE_URL "https://bitbucket.org/eigen/eigen/get/3.2.5.tar.gz")
+    set(EIGEN3_SOURCE_MD5 "8cc513ac6ec687117acadddfcacf551b")
 
     message(STATUS "Eigen3 not found on your system")
     message(STATUS " going to download sources from:")
@@ -71,9 +71,10 @@ if(NOT EIGEN3_FOUND)
     ExternalProject_Add(
         Eigen3
         LIST_SEPARATOR " "
-        URL ${EIGEN3_SOURCE_URL}
+		URL ${EIGEN3_SOURCE_URL}
         URL_MD5 ${EIGEN3_SOURCE_MD5}
         TIMEOUT ${3rdparty_DOWNLOAD_TIMEOUT}
+		DOWNLOAD_COMMAND wget ${EIGEN3_SOURCE_URL} COMMAND tar xzvf 3.2.5.tar.gz -C Eigen3 --strip-components 1 eigen-eigen-bdd17ee3b1b3/
         UPDATE_COMMAND ""
         PATCH_COMMAND ""
         BUILD_IN_SOURCE ON
