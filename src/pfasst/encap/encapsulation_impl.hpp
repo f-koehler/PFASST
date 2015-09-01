@@ -58,7 +58,6 @@ namespace pfasst
                 const vector<shared_ptr<Encapsulation<EncapsulationTrait>>>& x)
     {
       assert((size_t)mat.cols() == x.size());
-      const size_t cols = mat.cols();
       const size_t rows = mat.rows();
 
       // initialize result vector of encaps
@@ -74,7 +73,7 @@ namespace pfasst
     }
 
     template<class EncapsulationTrait>
-    typename EncapsulationTrait::spacial_type
+    typename EncapsulationTrait::spatial_type
     norm0(const shared_ptr<Encapsulation<EncapsulationTrait>> x)
     {
       return x->norm0();

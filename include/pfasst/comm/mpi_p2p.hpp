@@ -1,6 +1,10 @@
 #ifndef _PFASST__COMM__MPI_P2P_HPP_
 #define _PFASST__COMM__MPI_P2P_HPP_
 
+#ifndef WITH_MPI
+  #error "You need MPI enabled for using the MPI P2P communicator"
+#endif
+
 #include <list>
 #include <map>
 #include <memory>
@@ -8,10 +12,34 @@
 #include <utility>
 using namespace std;
 
+#include <leathers/push>
+#include <leathers/all>
 #include <mpi.h>
+#include <leathers/pop>
 
 #include "pfasst/comm/communicator.hpp"
 #include "pfasst/controller/status.hpp"
+
+
+#ifndef NON_CONST_MPI
+  template<typename T>
+  T* mpi_const_cast(const T* input) {
+      return const_cast<T*>(input);
+  }
+  template<typename T>
+  T& mpi_const_cast(const T& input) {
+      return const_cast<T&>(input);
+  }
+#else
+  template<typename T>
+  const T* mpi_const_cast(const T* input) {
+      return input;
+  }
+  template<typename T>
+  const T& mpi_const_cast(const T& input) {
+      return input;
+  }
+#endif
 
 
 namespace pfasst
@@ -40,7 +68,7 @@ namespace pfasst
         explicit MpiP2P(MPI_Comm comm = MPI_COMM_WORLD);
         MpiP2P(const MpiP2P& other) = default;
         MpiP2P(MpiP2P&& other) = default;
-        virtual ~MpiP2P() = default;  // TODO: might need to implement destructor to clean up pending MPI stati
+        virtual ~MpiP2P();
         MpiP2P& operator=(const MpiP2P& other) = default;
         MpiP2P& operator=(MpiP2P&& other) = default;
 
@@ -52,32 +80,22 @@ namespace pfasst
         virtual bool is_first() const override;
         virtual bool is_last() const override;
 
-        virtual void abort(const int& err_code);
+        virtual void cleanup() override;
+        virtual void abort(const int& err_code) override;
 
-        template<typename DataT>
-        void send(const DataT* const data, const int count, const int dest_rank, const int tag);
-        template<typename DataT>
-        void send_status(const StatusDetail<DataT>* const data, const int count, const int dest_rank, const int tag);
+        virtual void send(const double* const data, const int count, const int dest_rank, const int tag) override;
+        virtual void send_status(const StatusDetail<double>* const data, const int count, const int dest_rank, const int tag) override;
 
-        template<typename DataT>
-        void isend(const DataT* const data, const int count, const int dest_rank, const int tag);
-        template<typename DataT>
-        void isend_status(const StatusDetail<DataT>* const data, const int count, const int dest_rank, const int tag);
+        virtual void isend(const double* const data, const int count, const int dest_rank, const int tag) override;
+        virtual void isend_status(const StatusDetail<double>* const data, const int count, const int dest_rank, const int tag) override;
 
-        template<typename DataT>
-        void recv(DataT* data, const int count, const int dest_rank, const int tag);
-        template<typename DataT>
-        void recv_status(StatusDetail<DataT>* data, const int count, const int dest_rank, const int tag);
+        virtual void recv(double* data, const int count, const int dest_rank, const int tag) override;
+        virtual void recv_status(StatusDetail<double>* data, const int count, const int dest_rank, const int tag) override;
 
-        template<typename DataT>
-        void irecv(DataT* data, const int count, const int src_rank, const int tag);
-        template<typename DataT>
-        void irecv_status(StatusDetail<DataT>* data, const int count, const int src_rank, const int tag);
+        virtual void irecv(double* data, const int count, const int src_rank, const int tag) override;
+        virtual void irecv_status(StatusDetail<double>* data, const int count, const int src_rank, const int tag) override;
 
-        template<typename DataT>
-        void bcast(DataT* data, const int count, const int root_rank);
-        template<typename DataT>
-        void bcast_status(StatusDetail<DataT>* data, const int count, const int root_rank);
+        virtual void bcast(double* data, const int count, const int root_rank) override;
     };
   }  // ::pfasst::comm
 }  // ::pfasst
