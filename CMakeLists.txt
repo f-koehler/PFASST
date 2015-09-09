@@ -24,14 +24,13 @@ cmake_dependent_option(
 option(pfasst_BUILD_TESTS       "Build test suite for PFASST."                            ON )
 
 option(pfasst_WITH_MPI          "Build with MPI enabled."                                 ON )
-cmake_dependent_option(
-        pfasst_WITH_SCOREP       "enable scalable instrumentation with Score-P"           OFF
-            "pfasst_WITH_MPI" ON)
 
 option(pfasst_WITH_GCC_PROF     "Enable excessive debugging & profiling output with GCC." OFF)
 cmake_dependent_option(
        enable_LTO               "enable LinkTimeOptimization"                             OFF
             "CMAKE_BUILD_TYPE" Release)
+
+option(pfasst_WITH_EXTRA_WRAPPER "Build script to allow to set an additional wrapper via $PREP" OFF)
 
 option(pfasst_WITH_LOGGING      "Enable logging output on console"                        ON)
 
@@ -53,20 +52,19 @@ if(${pfasst_WITH_MPI})
     message(STATUS "Using MPI C++ Compiler Wrapper: ${MPI_CXX_COMPILER}")
     message(STATUS "USing MPI C Compiler Wrapper: ${MPI_C_COMPILER}")
     add_definitions(-DWITH_MPI)
+endif()
 
-    if(pfasst_WITH_SCOREP)
-        find_package(ScoreP REQUIRED)
-        configure_file(
-            "${pfasst_SOURCE_DIR}/cmake/scorep-cxx.sh.in"
-            "${CMAKE_BINARY_DIR}/scorep-cxx.sh"
-        )
-        configure_file(
-            "${pfasst_SOURCE_DIR}/cmake/scorep-cc.sh.in"
-            "${CMAKE_BINARY_DIR}/scorep-cc.sh"
-        )
-        set(CMAKE_CXX_COMPILER "${CMAKE_BINARY_DIR}/scorep-cxx.sh")
-        set(CMAKE_C_COMPILER "${CMAKE_BINARY_DIR}/scorep-cc.sh")
-    endif()
+if(pfasst_WITH_EXTRA_WRAPPER)
+    configure_file(
+        "${pfasst_SOURCE_DIR}/cmake/cxx_wrapper.sh.in"
+        "${CMAKE_BINARY_DIR}/cxx_wrapper.sh"
+    )
+    configure_file(
+        "${pfasst_SOURCE_DIR}/cmake/cc_wrapper.sh.in"
+        "${CMAKE_BINARY_DIR}/cc_wrapper.sh"
+    )
+    set(CMAKE_CXX_COMPILER "${CMAKE_BINARY_DIR}/cxx_wrapper.sh")
+    set(CMAKE_C_COMPILER "${CMAKE_BINARY_DIR}/cc_wrapper.sh")
 endif()
 
 # Check for C++11 support
@@ -103,15 +101,15 @@ elseif(${CMAKE_CXX_COMPILER_ID} MATCHES Clang)
         message(FATAL_ERROR "No C++11 support for Clang version. Please upgrade Clang to a version supporting C++11.")
     endif()
     add_to_string_list("${CMAKE_CXX_FLAGS}" CMAKE_CXX_FLAGS "-Wdeprecated -fdiagnostics-show-category=name -fdiagnostics-show-template-tree")
-elseif(${CMAKE_CXX_COMPILER_ID} MATCHES XL)
-    # NOTE: This branch is not tested yet (in theory it should work)
-    message(WARNING "IMB XL C/C++ support is experimental and not yet tested.")
-    check_cxx_compiler_flag(-qlanglvl=extended0x HAVE_STD11)
+elseif(${CMAKE_CXX_COMPILER_ID} MATCHES Intel)
+    check_cxx_compiler_flag(-std=c++11 HAVE_STD11)
     if(HAVE_STD11)
-        add_to_string_list("${CMAKE_CXX_FLAGS}" CMAKE_CXX_FLAGS "-qlanglvl=extended0x -qwarn0x")
+        add_to_string_list("${CMAKE_CXX_FLAGS}" CMAKE_CXX_FLAGS "-std=c++11")
     else()
-        message(FATAL_ERROR "No advanced standard C++ support of your IBM XL C/C++ compiler (-qlanglvl=extended0x not defined).")
+        message(FATAL_ERROR "No advanced standard C++ support for your Intel compiler (-std=c++11 not defined).")
     endif()
+elseif(${CMAKE_CXX_COMPILER_ID} MATCHES XL)
+    message(FATAL_ERROR "IMB XL C/C++ does not support C++11 features PFASST++ is utilizing.")
 else()
     message(FATAL_ERROR "Don't know how to check C++11 compatibility with compiler '${CMAKE_CXX_COMPILER_ID}'")
 endif()
@@ -129,7 +127,11 @@ else()
 endif()
 
 # Enable all compiler warnings
-add_to_string_list("${CMAKE_CXX_FLAGS}" CMAKE_CXX_FLAGS "-Wall -Wextra -Wpedantic")
+if(${CMAKE_CXX_COMPILER_ID} MATCHES Intel)
+    add_to_string_list("${CMAKE_CXX_FLAGS}" CMAKE_CXX_FLAGS "-Wall -Wextra")
+else()
+    add_to_string_list("${CMAKE_CXX_FLAGS}" CMAKE_CXX_FLAGS "-Wall -Wextra -Wpedantic")
+endif()
 
 
 # Set features from options

@@ -63,10 +63,10 @@ namespace pfasst
   }
 
   template<class SweeperTrait, typename Enabled>
-  const shared_ptr<typename SweeperTrait::encap_type::factory_type>
+  const typename SweeperTrait::encap_type::factory_type&
   Sweeper<SweeperTrait, Enabled>::get_encap_factory() const
   {
-    return this->_factory;
+    return *(this->_factory);
   }
 
   template<class SweeperTrait, typename Enabled>
@@ -74,7 +74,7 @@ namespace pfasst
   Sweeper<SweeperTrait, Enabled>::initial_state()
   {
     if (this->get_states().size() == 0) {
-      CLOG(ERROR, this->get_logger_id()) << "Sweeper need to be setup first before querying initial state.";
+      ML_CLOG(ERROR, this->get_logger_id(), "Sweeper need to be setup first before querying initial state.");
       throw runtime_error("sweeper not setup before querying initial state");
     }
     return this->states().front();
@@ -85,7 +85,7 @@ namespace pfasst
   Sweeper<SweeperTrait, Enabled>::get_initial_state() const
   {
     if (this->get_states().size() == 0) {
-      CLOG(ERROR, this->get_logger_id()) << "Sweeper need to be setup first before querying initial state.";
+      ML_CLOG(ERROR, this->get_logger_id(), "Sweeper need to be setup first before querying initial state.");
       throw runtime_error("sweeper not setup before querying initial state");
     }
     return this->get_states().front();
@@ -99,7 +99,7 @@ namespace pfasst
   }
 
   template<class SweeperTrait, typename Enabled>
-  const vector<shared_ptr<typename SweeperTrait::encap_type>>
+  const vector<shared_ptr<typename SweeperTrait::encap_type>>&
   Sweeper<SweeperTrait, Enabled>::get_states() const
   {
     return this->_states;
@@ -113,7 +113,7 @@ namespace pfasst
   }
 
   template<class SweeperTrait, typename Enabled>
-  const vector<shared_ptr<typename SweeperTrait::encap_type>>
+  const vector<shared_ptr<typename SweeperTrait::encap_type>>&
   Sweeper<SweeperTrait, Enabled>::get_previous_states() const
   {
     return this->_previous_states;
@@ -141,7 +141,7 @@ namespace pfasst
   }
 
   template<class SweeperTrait, typename Enabled>
-  const vector<shared_ptr<typename SweeperTrait::encap_type>>
+  const vector<shared_ptr<typename SweeperTrait::encap_type>>&
   Sweeper<SweeperTrait, Enabled>::get_tau() const
   {
     return this->_tau;
@@ -155,7 +155,7 @@ namespace pfasst
   }
 
   template<class SweeperTrait, typename Enabled>
-  const vector<shared_ptr<typename SweeperTrait::encap_type>>
+  const vector<shared_ptr<typename SweeperTrait::encap_type>>&
   Sweeper<SweeperTrait, Enabled>::get_residuals() const
   {
     return this->_residuals;
@@ -179,23 +179,23 @@ namespace pfasst
   void
   Sweeper<SweeperTrait, Enabled>::set_options()
   {
-    CVLOG(3, this->get_logger_id()) << "setting options from runtime parameters (if available)";
-    this->_abs_residual_tol = config::get_value<typename traits::spacial_type>("abs_res_tol", this->_abs_residual_tol);
-    this->_rel_residual_tol = config::get_value<typename traits::spacial_type>("rel_res_tol", this->_rel_residual_tol);
-    CVLOG(3, this->get_logger_id()) << "  absolut residual tolerance:  " << this->_abs_residual_tol;
-    CVLOG(3, this->get_logger_id()) << "  relative residual tolerance: " << this->_rel_residual_tol;
+    ML_CVLOG(3, this->get_logger_id(), "setting options from runtime parameters (if available)");
+    this->_abs_residual_tol = config::get_value<typename traits::spatial_type>("abs_res_tol", this->_abs_residual_tol);
+    this->_rel_residual_tol = config::get_value<typename traits::spatial_type>("rel_res_tol", this->_rel_residual_tol);
+    ML_CVLOG(3, this->get_logger_id(), "  absolut residual tolerance:  " << this->_abs_residual_tol);
+    ML_CVLOG(3, this->get_logger_id(), "  relative residual tolerance: " << this->_rel_residual_tol);
   }
 
   template<class SweeperTrait, typename Enabled>
   void
-  Sweeper<SweeperTrait, Enabled>::set_abs_residual_tol(const typename SweeperTrait::spacial_type& abs_res_tol)
+  Sweeper<SweeperTrait, Enabled>::set_abs_residual_tol(const typename SweeperTrait::spatial_type& abs_res_tol)
   {
     this->_abs_residual_tol = abs_res_tol;
   }
 
   template<class SweeperTrait, typename Enabled>
   void
-  Sweeper<SweeperTrait, Enabled>::set_rel_residual_tol(const typename SweeperTrait::spacial_type& rel_res_tol)
+  Sweeper<SweeperTrait, Enabled>::set_rel_residual_tol(const typename SweeperTrait::spatial_type& rel_res_tol)
   {
     this->_rel_residual_tol = rel_res_tol;
   }
@@ -207,129 +207,127 @@ namespace pfasst
     if (this->get_status() == nullptr) {
       throw runtime_error("Status not yet set.");
     }
-    CVLOG(1, this->get_logger_id()) << "setting up with t0=" << LOG_FIXED << this->get_status()->get_time()
+    ML_CVLOG(1, this->get_logger_id(), "setting up with t0=" << LOG_FIXED << this->get_status()->get_time()
               << ", dt=" << LOG_FIXED << this->get_status()->get_dt()
               << ", t_end=" << LOG_FIXED << this->get_status()->get_t_end()
-              << ", max_iter=" << LOG_FIXED << this->get_status()->get_max_iterations();
+              << ", max_iter=" << LOG_FIXED << this->get_status()->get_max_iterations());
 
     if (this->get_quadrature() == nullptr) {
       throw runtime_error("Quadrature not yet set.");
     }
-    CLOG(INFO, this->get_logger_id()) << "using as quadrature: " << this->get_quadrature()->print_summary()
-                                      << " and an expected error of " << LOG_FLOAT << this->get_quadrature()->expected_error();
+    ML_CLOG(INFO, this->get_logger_id(), "using as quadrature: " << this->get_quadrature()->print_summary()
+                                      << " and an expected error of " << LOG_FLOAT << this->get_quadrature()->expected_error());
 
-    assert(this->get_encap_factory() != nullptr);
+    // TODO: remove
+    /* assert(this->get_encap_factory() != nullptr); */
 
     const auto nodes = this->get_quadrature()->get_nodes();
     const auto num_nodes = this->get_quadrature()->get_num_nodes();
 
     this->states().resize(num_nodes + 1);
-    generate(this->states().begin(), this->states().end(),
-             bind(&traits::encap_type::factory_type::create, this->get_encap_factory()));
+    auto& factory = this->get_encap_factory();
+    generate(this->states().begin(), this->states().end(), [&factory](){ return factory.create(); });
 
     this->previous_states().resize(num_nodes + 1);
-    generate(this->previous_states().begin(), this->previous_states().end(),
-             bind(&traits::encap_type::factory_type::create, this->get_encap_factory()));
+    generate(this->previous_states().begin(), this->previous_states().end(), [&factory](){ return factory.create(); });
 
-    this->end_state() = this->get_encap_factory()->create();
+    this->end_state() = this->get_encap_factory().create();
 
     this->tau().resize(num_nodes + 1);
-    generate(this->tau().begin(), this->tau().end(),
-             bind(&traits::encap_type::factory_type::create, this->get_encap_factory()));
+    generate(this->tau().begin(), this->tau().end(), [&factory](){ return factory.create(); });
 
     this->residuals().resize(num_nodes + 1);
-    generate(this->residuals().begin(), this->residuals().end(),
-             bind(&traits::encap_type::factory_type::create, this->get_encap_factory()));
+    generate(this->residuals().begin(), this->residuals().end(), [&factory](){ return factory.create(); });
   }
 
   template<class SweeperTrait, typename Enabled>
   void
   Sweeper<SweeperTrait, Enabled>::pre_predict()
   {
-    CVLOG(4, this->get_logger_id()) << "pre-predicting";
+    ML_CVLOG(4, this->get_logger_id(), "pre-predicting");
   }
 
   template<class SweeperTrait, typename Enabled>
   void
   Sweeper<SweeperTrait, Enabled>::predict()
   {
-    CVLOG(4, this->get_logger_id()) << "predicting";
+    ML_CVLOG(4, this->get_logger_id(), "predicting");
   }
 
   template<class SweeperTrait, typename Enabled>
   void
   Sweeper<SweeperTrait, Enabled>::post_predict()
   {
-    CVLOG(4, this->get_logger_id()) << "post-predicting";
+    ML_CVLOG(4, this->get_logger_id(), "post-predicting");
 
     assert(this->get_status() != nullptr);
     this->integrate_end_state(this->get_status()->get_dt());
 
     assert(this->get_quadrature() != nullptr);
-    CVLOG(2, this->get_logger_id()) << "solution at nodes:";
+    ML_CVLOG(2, this->get_logger_id(), "solution at nodes:");
     for (size_t m = 0; m <= this->get_quadrature()->get_num_nodes(); ++m) {
-      CVLOG(2, this->get_logger_id()) << "  " << m << ": " << to_string(this->get_states()[m]);
+      ML_CVLOG(2, this->get_logger_id(), "  " << m << ": " << to_string(this->get_states()[m]));
     }
-    CVLOG(1, this->get_logger_id()) << "solution at t_end: " << to_string(this->get_end_state());
+    ML_CVLOG(1, this->get_logger_id(), "solution at t_end: " << to_string(this->get_end_state()));
   }
 
   template<class SweeperTrait, typename Enabled>
   void
   Sweeper<SweeperTrait, Enabled>::pre_sweep()
   {
-    CVLOG(4, this->get_logger_id()) << "pre-sweeping";
+    ML_CVLOG(4, this->get_logger_id(), "pre-sweeping");
   }
 
   template<class SweeperTrait, typename Enabled>
   void
   Sweeper<SweeperTrait, Enabled>::sweep()
   {
-    CVLOG(4, this->get_logger_id()) << "sweeping";
+    ML_CVLOG(4, this->get_logger_id(), "sweeping");
   }
 
   template<class SweeperTrait, typename Enabled>
   void
   Sweeper<SweeperTrait, Enabled>::post_sweep()
   {
-    CVLOG(4, this->get_logger_id()) << "post-sweeping";
+    ML_CVLOG(4, this->get_logger_id(), "post-sweeping");
 
     assert(this->get_status() != nullptr);
     this->integrate_end_state(this->get_status()->get_dt());
 
     assert(this->get_quadrature() != nullptr);
-    CVLOG(2, this->get_logger_id()) << "solution at nodes:";
+    ML_CVLOG(2, this->get_logger_id(), "solution at nodes:");
     for (size_t m = 0; m <= this->get_quadrature()->get_num_nodes(); ++m) {
-      CVLOG(2, this->get_logger_id()) << "\t" << m << ": " << to_string(this->get_states()[m]);
+      ML_CVLOG(2, this->get_logger_id(), "\t" << m << ": " << to_string(this->get_states()[m]));
     }
-    CVLOG(1, this->get_logger_id()) << "solution at t_end:" << to_string(this->get_end_state());
+    ML_CVLOG(1, this->get_logger_id(), "solution at t_end:" << to_string(this->get_end_state()));
   }
 
   template<class SweeperTrait, typename Enabled>
   void
   Sweeper<SweeperTrait, Enabled>::post_step()
   {
-    CVLOG(4, this->get_logger_id()) << "post step";
+    ML_CVLOG(4, this->get_logger_id(), "post step");
 
     assert(this->get_quadrature() != nullptr);
-    CVLOG(2, this->get_logger_id()) << "solution at nodes:";
+    ML_CVLOG(2, this->get_logger_id(), "solution at nodes:");
     for (size_t m = 0; m <= this->get_quadrature()->get_num_nodes(); ++m) {
-      CVLOG(2, this->get_logger_id()) << "\t" << m << ": " << to_string(this->get_states()[m]);
+      ML_CVLOG(2, this->get_logger_id(), "\t" << m << ": " << to_string(this->get_states()[m]));
     }
-    CVLOG(1, this->get_logger_id()) << "solution at t_end: " << to_string(this->get_end_state());
+    ML_CVLOG(1, this->get_logger_id(), "solution at t_end: " << to_string(this->get_end_state()));
   }
 
   template<class SweeperTrait, typename Enabled>
   void
   Sweeper<SweeperTrait, Enabled>::advance(const size_t& num_steps)
   {
-    CVLOG(1, this->get_logger_id()) << "advancing " << num_steps << " time steps";
+    ML_CVLOG(1, this->get_logger_id(), "advancing " << num_steps << " time steps");
   }
 
   template<class SweeperTrait, typename Enabled>
   void
   Sweeper<SweeperTrait, Enabled>::spread()
   {
-    CVLOG(4, this->get_logger_id()) << "spreading initial value to all states";
+    ML_CVLOG(4, this->get_logger_id(), "spreading initial value to all states");
 
     assert(this->get_initial_state() != nullptr);
 
@@ -343,7 +341,7 @@ namespace pfasst
   void
   Sweeper<SweeperTrait, Enabled>::save()
   {
-    CVLOG(4, this->get_logger_id()) << "saving states to previous states";
+    ML_CVLOG(4, this->get_logger_id(), "saving states to previous states");
 
     assert(this->get_quadrature() != nullptr);
     assert(this->get_states().size() == this->get_quadrature()->get_num_nodes() + 1);
@@ -393,22 +391,22 @@ namespace pfasst
     this->status()->rel_res_norm() = *(max_element(this->_rel_res_norms.cbegin(), this->_rel_res_norms.cend()));
 
     if (this->_abs_residual_tol > 0.0 || this->_rel_residual_tol > 0.0) {
-      CVLOG(4, this->get_logger_id()) << "convergence check";
+      ML_CVLOG(4, this->get_logger_id(), "convergence check");
 
       if (this->status()->abs_res_norm() < this->_abs_residual_tol) {
-        CVLOG(1, this->get_logger_id()) << "Sweeper has converged w.r.t. absolute residual tolerance: " << LOG_FLOAT
-                                        << this->status()->abs_res_norm() << " < " << this->_abs_residual_tol;
+        ML_CVLOG(1, this->get_logger_id(), "Sweeper has converged w.r.t. absolute residual tolerance: " << LOG_FLOAT
+                                        << this->status()->abs_res_norm() << " < " << this->_abs_residual_tol);
       } else if (this->status()->rel_res_norm() < this->_rel_residual_tol) {
-        CVLOG(1, this->get_logger_id()) << "Sweeper has converged w.r.t. relative residual tolerance: " << LOG_FLOAT
-                                        << this->status()->rel_res_norm() << " < " << this->_rel_residual_tol;
+        ML_CVLOG(1, this->get_logger_id(), "Sweeper has converged w.r.t. relative residual tolerance: " << LOG_FLOAT
+                                        << this->status()->rel_res_norm() << " < " << this->_rel_residual_tol);
       } else {
-        CVLOG(1, this->get_logger_id()) << "Sweeper has not yet converged to neither residual tolerance.";
+        ML_CVLOG(1, this->get_logger_id(), "Sweeper has not yet converged to neither residual tolerance.");
       }
 
       return (   this->status()->abs_res_norm() < this->_abs_residual_tol
               || this->status()->rel_res_norm() < this->_rel_residual_tol);
     } else {
-      CLOG(WARNING, this->get_logger_id()) << "No residual tolerances set. Thus skipping convergence check.";
+      ML_CLOG(WARNING, this->get_logger_id(), "No residual tolerances set. Thus skipping convergence check.");
       return false;
     }
   }
@@ -419,14 +417,14 @@ namespace pfasst
   {
     UNUSED(dt);
     assert(this->get_quadrature() != nullptr);
-    CVLOG(4, this->get_logger_id()) << "integrating end state";
+    ML_CVLOG(4, this->get_logger_id(), "integrating end state");
 
     if (this->get_quadrature()->right_is_node()) {
       assert(this->get_end_state() != nullptr);
       assert(this->get_states().size() > 0);
 
       this->end_state()->data() = this->get_states().back()->get_data();
-      CVLOG(1, this->get_logger_id()) << "end state: " << to_string(this->get_end_state());
+      ML_CVLOG(1, this->get_logger_id(), "end state: " << to_string(this->get_end_state()));
     } else {
       throw runtime_error("integration of end state for quadrature not including right time interval boundary");
     }

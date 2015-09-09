@@ -46,12 +46,12 @@ namespace pfasst
       //! size = #nodes + 1
       vector<shared_ptr<typename traits::encap_type>>        _tau;
       vector<shared_ptr<typename traits::encap_type>>        _residuals;
-      vector<typename traits::spacial_type>                  _abs_res_norms;
-      vector<typename traits::spacial_type>                  _rel_res_norms;
+      vector<typename traits::spatial_type>                  _abs_res_norms;
+      vector<typename traits::spatial_type>                  _rel_res_norms;
 
       shared_ptr<Status<typename traits::time_type>>         _status;
-      typename traits::spacial_type                          _abs_residual_tol;
-      typename traits::spacial_type                          _rel_residual_tol;
+      typename traits::spatial_type                          _abs_residual_tol;
+      typename traits::spatial_type                          _rel_residual_tol;
 
       string                                                 _logger_id;
 
@@ -71,31 +71,31 @@ namespace pfasst
       Sweeper<SweeperTrait, Enabled>& operator=(Sweeper<SweeperTrait, Enabled>&& other) = default;
 
       virtual       shared_ptr<IQuadrature<typename SweeperTrait::time_type>>& quadrature();
-      virtual const shared_ptr<IQuadrature<typename SweeperTrait::time_type>>  get_quadrature() const;
+      virtual const shared_ptr<IQuadrature<typename SweeperTrait::time_type>> get_quadrature() const;
 
       virtual       shared_ptr<Status<typename SweeperTrait::time_type>>& status();
       virtual const shared_ptr<Status<typename SweeperTrait::time_type>>  get_status() const;
 
       virtual       shared_ptr<typename SweeperTrait::encap_type::factory_type>& encap_factory();
-      virtual const shared_ptr<typename SweeperTrait::encap_type::factory_type>  get_encap_factory() const;
+      virtual const typename SweeperTrait::encap_type::factory_type&  get_encap_factory() const;
 
       virtual       shared_ptr<typename SweeperTrait::encap_type>&         initial_state();
       virtual       vector<shared_ptr<typename SweeperTrait::encap_type>>& states();
       virtual       vector<shared_ptr<typename SweeperTrait::encap_type>>& tau();
 
       virtual const shared_ptr<typename SweeperTrait::encap_type>          get_initial_state() const;
-      virtual const vector<shared_ptr<typename SweeperTrait::encap_type>>  get_states() const;
-      virtual const vector<shared_ptr<typename SweeperTrait::encap_type>>  get_previous_states() const;
+      virtual const vector<shared_ptr<typename SweeperTrait::encap_type>>& get_states() const;
+      virtual const vector<shared_ptr<typename SweeperTrait::encap_type>>& get_previous_states() const;
       virtual const shared_ptr<typename SweeperTrait::encap_type>          get_end_state() const;
-      virtual const vector<shared_ptr<typename SweeperTrait::encap_type>>  get_tau() const;
-      virtual const vector<shared_ptr<typename SweeperTrait::encap_type>>  get_residuals() const;
+      virtual const vector<shared_ptr<typename SweeperTrait::encap_type>>& get_tau() const;
+      virtual const vector<shared_ptr<typename SweeperTrait::encap_type>>& get_residuals() const;
 
       virtual       void  set_logger_id(const string& logger_id);
       virtual const char* get_logger_id() const;
 
       virtual void set_options();
-      virtual void set_abs_residual_tol(const typename SweeperTrait::spacial_type& abs_res_tol);
-      virtual void set_rel_residual_tol(const typename SweeperTrait::spacial_type& rel_res_tol);
+      virtual void set_abs_residual_tol(const typename SweeperTrait::spatial_type& abs_res_tol);
+      virtual void set_rel_residual_tol(const typename SweeperTrait::spatial_type& rel_res_tol);
 
       virtual void setup();
 
