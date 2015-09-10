@@ -296,6 +296,10 @@ namespace pfasst
     this->status()->state() = State::ITER_FINE;
     this->get_fine()->sweep();
 
+    auto rank = this->get_communicator()->get_rank();
+    if(rank == 1)
+        std::this_thread::sleep_for(std::chrono::milliseconds(200));
+
     this->status()->state() = State::POST_ITER_FINE;
     this->get_fine()->post_sweep();
 
