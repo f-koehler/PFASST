@@ -298,7 +298,7 @@ namespace pfasst
 
     auto rank = this->get_communicator()->get_rank();
     if(rank == 1)
-        std::this_thread::sleep_for(std::chrono::milliseconds(200));
+        std::this_thread::sleep_for(std::chrono::milliseconds(4));
 
     this->status()->state() = State::POST_ITER_FINE;
     this->get_fine()->post_sweep();
